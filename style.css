@@ -13,15 +13,21 @@
 }
 
 .page {
-  /* background-color: rgb(163, 163, 163); */
   padding: 30px;
 }
 
-.main__table-wrapper {
+.page__main {
+  display: flex;
+  gap: 200px;
+}
+
+.main__table-wrapper,
+.worker__table-wrapper {
   position: relative;
 }
 
-.main__table {
+table {
+  position: relative;
   table-layout: fixed;
   border-spacing: 0;
   border-collapse: collapse;
@@ -32,18 +38,18 @@ input::-webkit-inner-spin-button {
     -webkit-appearance: none;
 }
 
-.table__header tr {
+tr {
   border: 1px solid #b7b9bb;
 }
 
-.table__header th {
+th {
   position: relative;
   padding: 0.5em 1.5em;
   text-align: start;
   background-color: #f3f3f3;
 }
 
-.table__header th:last-child:after {
+.table__worker-th::after {
   position: absolute;
   content: '';
   margin-left: 10px;
@@ -55,20 +61,18 @@ input::-webkit-inner-spin-button {
   border-bottom: 2px solid black;
 }
 
-.table__header th:last-child:hover {
+.table__worker-th:hover {
   background-color: #dfdfdf;
   cursor: pointer;
 }
 
-.table__header th:not(:last-child):hover {
-  cursor: default;
-}
-
-.table__body tr {
+tr {
   border: 1px solid #b7b9bb;
+  margin-right: 50px;
 }
 
-.table__body td {
+td {
+  position: relative;
   padding: 0.5em 1em;
 }
 
@@ -88,17 +92,67 @@ input::-webkit-inner-spin-button {
   border-radius: 3px;
 }
 
+.table__input-group-value {
+  max-width: 100px;
+}
+
 .table__body {
   position: relative;
 }
 
-.table__add-button {
+.table__add-button,
+.workers-table__add-button {
   position: absolute;
   left: 0;
 }
 
 .table__input-worker-name {
   position: relative;
+  max-width: 200px;
 }
+
+.table__input-worker-name[disabled] {
+  color: inherit;
+}
+
+.table__input-worker-remove-button,
+.workers-table__input-worker-remove-button {
+  position: absolute;
+  right: -40px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.table__checkbox {
+  display: block;
+  width: 15px;
+  height: 15px;
+  margin-inline: auto;
+}
+
+.workers-table__progress-bar-container {
+  position: relative;
+  width: 200px;
+  border: 1px solid green;
+  height: 24px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.workers-table__progress-bar-value {
+  width: 80%;
+  height: 100%;
+  background-color: green;
+}
+
+.workers-table-progress-bar-text {
+  position: absolute;
+  text-align: center;
+  display: block;
+  width: 100%;
+}
+
+
+
 
 
