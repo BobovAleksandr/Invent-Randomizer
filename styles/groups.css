@@ -1,0 +1,155 @@
+.groups__title {
+  text-align: center;
+}
+
+.groups {
+  position: relative;
+  width: 700px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.groups:hover .groups__add-button {
+  opacity: 1;
+}
+
+.groups__list {
+  background-color: #eee;
+  border-radius: 7px;
+  padding-inline: 15px;
+}
+
+.groups__item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-block: 5px;
+  padding-inline: 5px;
+}
+
+.groups__item:hover .groups__remove-button {
+  opacity: 1;
+}
+
+.groups__item:not(:last-of-type) {
+  border-bottom: 1px solid rgba(34, 40, 49, 0.2);
+}
+
+.groups__item:has(:checked) {
+  color: rgba(34, 40, 49, 0.2);
+}
+
+.groups__name {
+  display: block;
+  width: 270px;
+  margin-right: 20px;
+}
+
+.groups__amount {
+  display: block;
+  width: 80px;
+  text-align: right;
+  margin-right: 5px;
+}
+
+.groups__amount-text {
+  display: block;
+  padding-block: 5px;
+  margin-right: 50px;
+}
+
+.groups__worker {
+  width: 140px;
+  display: block;
+  margin-right: 50px;
+}
+
+.groups__input {
+  border: none;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  font-weight: inherit;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.groups__input:hover {
+  outline: 1px solid rgba(34, 40, 49, 0.2);
+  background-color: #fff;
+}
+
+.groups__input:focus {
+  background-color: #fff;
+  outline: none;
+}
+
+.groups__input:required {
+  outline: 1px solid rgba(34, 40, 49, 0.2);
+}
+
+.groups__input:valid {
+  outline: none;
+}
+
+.groups__input::placeholder {
+  color: rgba(34, 40, 49, 0.5);
+}
+
+.groups__add-button {
+  opacity: 0;
+  position: absolute;
+  bottom: -40px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.groups__list:not(:has(.groups__item)) + .groups__add-button {
+  opacity: 1;
+}
+
+.groups__add-button::after {
+  position: absolute;
+  content: '';
+  width: 50%;
+  height: 2px;
+  background-color: #222831;
+  top: 14px;
+  left: 50%;
+  transform: translate(-50%);
+}
+
+.groups__add-button::before {
+  position: absolute;
+  content: '';
+  width: 2px;
+  height: 50%;
+  background-color: #222831;
+  top: 50%;
+  left: 14px;
+  transform: translateY(-50%);
+}
+
+.groups__remove-button {
+  position: absolute;
+  right: -55px;
+  opacity: 0;
+  transition: all 0.1s ease;
+}
+
+.groups__remove-button:hover {
+  opacity: 1;
+}
+
+.groups__remove-button::after {
+  position: absolute;
+  content: '';
+  width: 50%;
+  height: 2px;
+  background-color: #222831;
+  top: 14px;
+  left: 50%;
+  transform: translate(-50%);
+}
