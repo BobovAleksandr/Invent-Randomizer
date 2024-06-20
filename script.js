@@ -43,7 +43,7 @@ function createWorker(name = '', groups = [], isFull = false, totalValue = 0, co
 
 
 // Функция создаёт и возвращает нового сотрудника (элемент DOM)
-function renderWorker(name = '') {
+function renderWorker(name = '', amount = 0) {
   let worker = document.createElement('li')
   worker.classList.add('workers__list-item', 'worker')
   let workerCard = document.createElement('div')
@@ -57,6 +57,7 @@ function renderWorker(name = '') {
   workerName.classList.add('worker__name', 'worker__input')
   let workerAmount = document.createElement('span')
   workerAmount.classList.add('worker__amount')
+  workerAmount.textContent = `${amount} шт.`
   let workerProgressContainer = document.createElement('div')
   workerProgressContainer.classList.add('worker__progress-container')
   let workerProgressBar = document.createElement('div')
@@ -96,7 +97,7 @@ function loadWorkers() {
   if (localStorage.getItem('workers')) {
     let currentWorkers = JSON.parse(localStorage.getItem('workers'))
     currentWorkers.forEach(worker => {
-      workersList.appendChild(renderWorker(worker.name, worker.groups))
+      workersList.appendChild(renderWorker(worker.name, worker.totalValue))
       workers.push(createWorker(worker.name, worker.groups, worker.isFull, +worker.totalValue, +worker.completedValue, +worker.reducePercent, ))
     });
     // setProgressBar()
@@ -123,6 +124,11 @@ document.addEventListener('change', (event) => {
       event.target.disabled = true
       addWorkerToArray(event.target.value)
       saveWorkers()
+      // Добавляем сотрудника в options  у каждого select'a сотрудника в группе
+      let $groupsWorkersSelects = [...document.querySelectorAll('.groups__select')]
+      $groupsWorkersSelects.forEach($select => {
+        $select.appendChild(renderWorkerSelectOption(event.target.value))
+      }) 
     }
   }
 })
@@ -153,8 +159,20 @@ function deleteWorker(workerName) {
       group.currentWorker = ''
       group.isTaken = false
       group.isCompleted = false
+      let $currentGroupSelect = [...document.querySelectorAll('.groups__name')].find(input => input.value === group.name).closest('.groups__item').querySelector('.groups__select')
+      $currentGroupSelect.value = ''
+      let $currentSelectOptions = [...$currentGroupSelect.querySelectorAll('.groups__option')]
+      $currentSelectOptions.forEach($option => {
+        $option.classList.remove('selected')
+      })
     }
   })
+  // Удаляем сотрудника из списка опций сотруников группы товаров
+  let $groupsWorkersOptions = [...document.querySelectorAll('.groups__option')].filter($option => $option.value === workerName)
+  $groupsWorkersOptions.forEach($option => {
+    $option.remove()
+  })
+
   saveGroups()
 }
 
@@ -269,10 +287,7 @@ function renderGroup(group = {}) {
   $group.appendChild($groupWorker)
   $groupWorker.appendChild($groupOptionWhitespace)
   workers.forEach(worker => {
-    let $groupOption = document.createElement('option')
-    $groupOption.classList.add('groups__option')
-    $groupOption.value = worker.name
-    $groupOption.textContent = worker.name
+    let $groupOption = renderWorkerSelectOption(worker.name)
     if (group.currentWorker === worker.name) {
       $groupOption.selected = true
       $groupOption.classList.add('selected')
@@ -282,6 +297,14 @@ function renderGroup(group = {}) {
   $group.appendChild($groupsCheckbox)
   $group.appendChild($groupRemove)
   return $group
+}
+
+function renderWorkerSelectOption(workerName) {
+  let $groupOption = document.createElement('option')
+  $groupOption.classList.add('groups__option')
+  $groupOption.value = workerName
+  $groupOption.textContent = workerName
+  return $groupOption
 }
 
 // Функция сохраняет сотрудников в Local Storage
@@ -317,8 +340,14 @@ document.addEventListener('change', (event) => {
     })
   }
 
-  if (event.target.classList.contains('groups__amount') && event.target.closest('.groups__item').querySelector('.groups__name').value === '') {
+  if (event.target.classList.contains('groups__amount') && event.target.closest('.groups__item').querySelector('.groups__name').value.trim() === '') {
     showError('Не указано название группы товаров')
+    event.target.value = ''
+    event.target.closest('.groups__item').querySelector('.groups__name').value = ''
+  }
+
+  if (event.target.classList.contains('groups__amount') && event.target.value < 1 && event.target.closest('.groups__item').querySelector('.groups__name').value.trim() !== '') {
+    showError('Количество товаров должно быть больше нуля')
     event.target.value = ''
   }
 
@@ -356,13 +385,16 @@ document.addEventListener('click', (event) => {
 // Функция удаляет сотрудника из DOM, из массива и из групп
 function deleteGroup(groupName) {
   let $currentGroup = [...document.querySelectorAll('.groups__name')].find(input => input.value === groupName).closest('.groups__item')
-  let $currentWorkerGroup = [...document.querySelectorAll('.worker__group-name')].find(group => group.textContent === groupName).closest('.worker__group')
   let currentGroupObject = groups.find(group => group.name === groupName)
-  $currentWorkerGroup.remove()
   $currentGroup.remove()
   groups = groups.filter(group => group.name !== groupName)
   saveGroups()
-
+  
+  if (currentGroupObject.isTaken) {
+    let $currentWorkerGroup = [...document.querySelectorAll('.worker__group-name')].find(group => group.textContent === groupName).closest('.worker__group')
+    $currentWorkerGroup.remove()
+    // changeWorkersAmount(currentWorkerObject)
+  }
   workers.forEach(worker => {
     worker.groups = worker.groups.filter(group => group.name !== groupName)
     worker.isFull = false // TODO - ДОБАВИТЬ ПРОВЕРКУ ЕСЛИ РАВНО ISFULL
@@ -398,13 +430,14 @@ document.addEventListener('change', (event) => {
 // Функция привязывает сотрудника к группе и добавляет её в массив групп сотрудника
 function bindWorkerToGroup(workerNameSelect, groupObject) {
   let currentWorkerObject = workers.find(worker => worker.name === workerNameSelect.value)
-    groupObject.currentWorker = currentWorkerObject.name
-    groupObject.isTaken = true
-    currentWorkerObject.groups.push(groupObject)
-    currentWorkerObject.totalValue += +groupObject.amount
-    renderWorkerGroup(currentWorkerObject, groupObject)
-    let $currentSelect = [...workerNameSelect.querySelectorAll('.groups__option')].find(select => select.value === currentWorkerObject.name)
-    $currentSelect.classList.add('selected')
+  groupObject.currentWorker = currentWorkerObject.name
+  groupObject.isTaken = true
+  currentWorkerObject.groups.push(groupObject)
+  currentWorkerObject.totalValue += +groupObject.amount
+  renderWorkerGroup(currentWorkerObject, groupObject)
+  let $currentSelect = [...workerNameSelect.querySelectorAll('.groups__option')].find(select => select.value === currentWorkerObject.name)
+  $currentSelect.classList.add('selected')
+  changeWorkersAmount(currentWorkerObject)
 }
 
 // Функция удаляет группу из объекта сотрудника и отвязывает сотрудника от группы
@@ -422,10 +455,19 @@ function unbindWorkerFromGroup(groupObject) { // TODO - ДОБАВИТЬ ПРО�
   }
   let $currentGroupCard = [...document.querySelectorAll('.worker__group-name')].find(group => group.textContent === groupObject.name).closest('.worker__group')
   $currentGroupCard.remove()
+  changeWorkersAmount(currentWorkerObject)
+}
+
+// Функция меняет количество товаров в DOM-карточке сотрудника
+function changeWorkersAmount(workerObject) {
+  let $workerAmount = [...document.querySelectorAll('.worker__name')].find(worker => worker.value === workerObject.name).nextElementSibling
+  if ($workerAmount.classList.contains('worker__amount')) {
+    $workerAmount.textContent = `${workerObject.totalValue} шт.`
+  }
 }
 
 // --------------------------------------------------------------------------------
-// -------------------------------------------------------------------------------- СМЕНА КОЛИЧЕСТВА ТОВРОВ В ГРУППЕ
+// -------------------------------------------------------------------------------- СМЕНА КОЛИЧЕСТВА ТОВАРОВ В ГРУППЕ
 // --------------------------------------------------------------------------------
 
 // Функция меняет количество товаров в объекте группы, в массиве групп объекта сотрудника и в DOM
