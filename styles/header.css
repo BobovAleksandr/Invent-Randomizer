@@ -1,0 +1,16 @@
+.error__cantainer {
+  width: 500px;
+  height: 50px;
+  border: 2px solid red;
+  border-radius: 20px;
+  margin-bottom: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.error__text {
+  font-family: inherit;
+  font-size: 18px;
+}
+

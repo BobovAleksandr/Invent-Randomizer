@@ -114,6 +114,16 @@
   outline: none;
 }
 
+.worker__input:disabled {
+  cursor: pointer;
+  outline: none;
+}
+
+.worker__input:disabled:hover {
+  background-color: inherit;
+  
+}
+
 .worker__input::placeholder {
   color: rgba(34, 40, 49, 0.5);
 }
@@ -175,7 +185,7 @@
 
 .worker__group-amount {
   display: block;
-  width: 80px;
+  width: 90px;
   margin-right: 40px;
   text-align: right;
 }

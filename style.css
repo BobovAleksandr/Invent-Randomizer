@@ -23,8 +23,9 @@ input::-webkit-inner-spin-button {
 
 .page {
   display: flex;
-  justify-content: center;
-  padding-block: 100px;
+  flex-direction: column;
+  align-items: center;
+  padding-block: 50px;
 }
 
 .table {
@@ -66,4 +67,8 @@ display: none;
 
 .hidden {
   visibility: hidden;
+}
+
+.form {
+  
 }

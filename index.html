@@ -5,12 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Кит / Инвентаризация</title>
   <link rel="stylesheet" href="./styles/fonts.css">
+  <link rel="stylesheet" href="./styles/header.css">
   <link rel="stylesheet" href="./styles/workers.css">
   <link rel="stylesheet" href="./styles/groups.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page">
   <header class="page__header header">
+    <div class="error__cantainer hidden">
+      <span class="error__text">хуй</span>
+    </div>
   </header>
   <main class="page__main">
     <section class="workers">
@@ -51,9 +55,9 @@
               <span class="worker__group-name">26. Инструмент</span>
               <span class="worker__group-amount">98 шт.</span>
               <input type="checkbox" class="worker__group-checkbox checkbox">
-            </li>
+            </li> -->
           </ul>
-        </li> -->
+        </li>
       </ul>
       <button class="workers__add-button button" type="button"></button>
     </section>
@@ -62,9 +66,13 @@
       <ul class="groups__list">
         <!-- <li class="groups__item">
           <input placeholder="Группа товаров" value="" required type="text" class="groups__name groups__input"></input>
-          <input placeholder="Кол-во" value="" required type="number" class="groups__amount groups__input"></input>
+          <input placeholder="Кол." value="" required type="number" class="groups__amount groups__input"></input>
           <span class="groups__amount-text">шт.</span>
-          <span class="groups__worker"></span>
+          <select name="groups__select" id="groups__select" class="groups__select">
+            <option selected class="groups__option" value=""></option>
+            <option class="groups__option" value="Костиков">Костиков</option>
+            <option class="groups__option" value="Шаров">Шаров</option>
+          </select>
           <input type="checkbox" disabled class="groups__checkbox checkbox">
           <button class="groups__remove-button button" type="button"></button>
         </li> -->
