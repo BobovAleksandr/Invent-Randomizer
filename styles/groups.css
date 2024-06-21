@@ -66,7 +66,7 @@
 .groups__select {
   font-family: inherit;
   font-size: inherit;
-  color: #222831;
+  color: inherit;
   font-weight: inherit;
   width: 160px;
   display: block;
@@ -85,6 +85,11 @@
 
 .groups__select:has(.selected) {
   outline: none;
+}
+
+.groups__select:disabled:hover   {
+  background-color: inherit;
+  cursor: auto;
 }
 
 .groups__option {

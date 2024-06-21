@@ -35,6 +35,12 @@ function createWorker(name = '', groups = [], isFull = false, totalValue = 0, co
    groups,
    isFull,
    totalValue,
+   getTotalValue: function() {
+    let total = this.groups.reduce((sum, group) => sum + group.amount, 0)
+    let $workerAmountSpan = [...document.querySelectorAll('.worker__name')].find(worker => worker.value === this.name).nextElementSibling
+    $workerAmountSpan.textContent = `${total} шт.`
+    return total
+  },
    completedValue,
    reducePercent,
    completedPercent: this.completedValue / this.totalValue * 100,
@@ -149,13 +155,10 @@ document.addEventListener('click', (event) => {
 
 // Функция удаляет сотрудника из DOM, из массива и из групп
 function deleteWorker(workerName) {
-  let currentWorkerElement = [...document.querySelectorAll('.worker__name')].find(input => input.value === workerName).closest('.worker')
-  currentWorkerElement.remove()
-  workers = workers.filter(worker => worker.name !== workerName)
-  saveWorkers()
-
+  
   groups.forEach(group => {
     if (group.currentWorker === workerName) {
+      changeGroupCompletedStatus(group, false)
       group.currentWorker = ''
       group.isTaken = false
       group.isCompleted = false
@@ -167,11 +170,19 @@ function deleteWorker(workerName) {
       })
     }
   })
+
+  let currentWorkerElement = [...document.querySelectorAll('.worker__name')].find(input => input.value === workerName).closest('.worker')
+  currentWorkerElement.remove()
+  workers = workers.filter(worker => worker.name !== workerName)
+  saveWorkers()
+
   // Удаляем сотрудника из списка опций сотруников группы товаров
   let $groupsWorkersOptions = [...document.querySelectorAll('.groups__option')].filter($option => $option.value === workerName)
   $groupsWorkersOptions.forEach($option => {
     $option.remove()
   })
+
+  
 
   saveGroups()
 }
@@ -267,7 +278,6 @@ function renderGroup(group = {}) {
   }
   let $groupsCheckbox = document.createElement('input')
   $groupsCheckbox.type = "checkbox"
-  $groupsCheckbox.disabled = true
   if (group.isCompleted) {
     $groupsCheckbox.checked = true
     $groupAmount.disabled = true
@@ -395,10 +405,11 @@ function deleteGroup(groupName) {
     $currentWorkerGroup.remove()
     // changeWorkersAmount(currentWorkerObject)
   }
+
   workers.forEach(worker => {
     worker.groups = worker.groups.filter(group => group.name !== groupName)
     worker.isFull = false // TODO - ДОБАВИТЬ ПРОВЕРКУ ЕСЛИ РАВНО ISFULL
-    worker.totalValue -= +currentGroupObject.amount
+    worker.totalValue = worker.getTotalValue()
     if (currentGroupObject.isCompleted) {
       worker.completedValue -= +currentGroupObject.amount
     }
@@ -433,7 +444,7 @@ function bindWorkerToGroup(workerNameSelect, groupObject) {
   groupObject.currentWorker = currentWorkerObject.name
   groupObject.isTaken = true
   currentWorkerObject.groups.push(groupObject)
-  currentWorkerObject.totalValue += +groupObject.amount
+  currentWorkerObject.totalValue = currentWorkerObject.getTotalValue()
   renderWorkerGroup(currentWorkerObject, groupObject)
   let $currentSelect = [...workerNameSelect.querySelectorAll('.groups__option')].find(select => select.value === currentWorkerObject.name)
   $currentSelect.classList.add('selected')
@@ -446,7 +457,7 @@ function unbindWorkerFromGroup(groupObject) { // TODO - ДОБАВИТЬ ПРО�
   groupObject.currentWorker = ''
   groupObject.isTaken = false
   currentWorkerObject.groups = currentWorkerObject.groups.filter(group => group.name !== groupObject.name)
-  currentWorkerObject.totalValue -= +groupObject.amount
+  currentWorkerObject.totalValue = currentWorkerObject.getTotalValue()
   let $currentOptions = [...document.querySelectorAll('.groups__name')].find(group => group.value === groupObject.name).closest('.groups__item').querySelectorAll('.groups__option')
   let $currentOption = [...$currentOptions].find(option => option.value === currentWorkerObject.name)
   $currentOption.classList.remove('selected')
@@ -483,8 +494,7 @@ function changeGroupAmount(currentGroupObject, groupInput) {
       let currentWorkerGroup = worker.groups.find(group => group.name === currentGroupObject.name)
       if (currentWorkerGroup) {
         currentWorkerGroup.amount = +groupInput.value
-        worker.totalValue -= currentGroupObject.amount
-        worker.totalValue += +groupInput.value
+        worker.totalValue = worker.getTotalValue()
         if (currentGroupObject.isCompleted) {
           worker.completedValue -= currentGroupObject.amount
           worker.completedValue += +groupInput.value
@@ -542,4 +552,54 @@ function createWorkerGroup(groupName, groupAmount, groupIsCompleted) {
 }
 
 
+// --------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------- ОТМЕТКА ГРУПП ВЫПОЛНЕННЫМИ
+// --------------------------------------------------------------------------------
 
+document.addEventListener('change', (event) => {
+  if (event.target.classList.contains('worker__group-checkbox')) {
+    let currentGroupObject = groups.find(group => group.name === event.target.closest('.worker__group').querySelector('.worker__group-name').textContent)
+    let isChecked = event.target.checked
+    changeGroupCompletedStatus(currentGroupObject, isChecked)
+  }
+
+  if (event.target.classList.contains('groups__checkbox')) {
+    let currentGroupObject = groups.find(group => group.name === event.target.closest('.groups__item').querySelector('.groups__name').value)
+    let isChecked = event.target.checked
+    changeGroupCompletedStatus(currentGroupObject, isChecked)
+  }
+})
+
+function changeGroupCompletedStatus(currentGroup, isChecked) {
+  let $currentGroupCheckbox = [...document.querySelectorAll('.groups__name')].find(input => input.value === currentGroup.name).closest('.groups__item').querySelector('.groups__checkbox')
+  let $currentWorkerGroupCheckbox = [...document.querySelectorAll('.worker__group-name')].find(span => span.textContent === currentGroup.name).closest('.worker__group').querySelector('.worker__group-checkbox')
+  let $currentGroupAmount = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__amount')
+  let $currentGroupSelect = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__select')
+  let currentGroupWorker = workers.find(worker => worker.name === currentGroup.currentWorker)
+  if (isChecked) {
+    currentGroup.isCompleted = true
+    $currentWorkerGroupCheckbox.checked = true
+    console.log($currentWorkerGroupCheckbox)
+    $currentGroupCheckbox.checked = true
+    $currentGroupAmount.disabled = true
+    $currentGroupSelect.disabled = true
+    currentGroupWorker.groups.forEach(group => {
+      if (group.name === currentGroup.name) {
+        group.isCompleted = true
+      }
+    }) 
+  } else {
+    currentGroup.isCompleted = false
+    $currentWorkerGroupCheckbox.checked = false
+    $currentGroupCheckbox.checked = false
+    $currentGroupAmount.disabled = false
+    $currentGroupSelect.disabled = false
+    currentGroupWorker.groups.forEach(group => {
+      if (group.name === currentGroup.name) {
+        group.isCompleted = false
+      }
+    }) 
+  } 
+  saveGroups()
+  saveWorkers()
+}
