@@ -29,62 +29,65 @@ let workers = []
 // }
 
 // Функция создает и возращает нового сотрудника (объект)
-function createWorker(name = '', groups = [], isFull = false, totalValue = 0, completedValue = 0, reducePercent = 0) {
+function createWorker(name = "", groups = [], isFull = false, totalValue = 0, completedValue = 0, reducePercent = 0) {
   return {
-   name,
-   groups,
-   isFull,
-   totalValue,
-   getTotalValue: function() {
-    let total = this.groups.reduce((sum, group) => sum + group.amount, 0)
-    let $workerAmountSpan = [...document.querySelectorAll('.worker__name')].find(worker => worker.value === this.name).nextElementSibling
-    $workerAmountSpan.textContent = `${total} шт.`
-    return total
-  },
-   completedValue,
-   reducePercent,
-   completedPercent: this.completedValue / this.totalValue * 100,
- }
+    name,
+    groups,
+    isFull,
+    totalValue,
+    completedValue,
+    reducePercent,
+    getTotalValue: function() {
+      let total = this.groups.reduce((sum, group) => sum + group.amount, 0)
+      let $workerAmountSpan = [...document.querySelectorAll(".worker__name")].find((worker) => worker.value === this.name).nextElementSibling
+      $workerAmountSpan.textContent = `${total} шт.`
+      return total
+    },
+    getCompletedValue: function() {
+      let total = this.groups.filter((group) => group.isCompleted === true).reduce((sum, group) => sum + group.amount, 0)
+      return total
+    },
+  }
 }
 
 
 // Функция создаёт и возвращает нового сотрудника (элемент DOM)
-function renderWorker(name = '', amount = 0) {
-  let worker = document.createElement('li')
-  worker.classList.add('workers__list-item', 'worker')
-  let workerCard = document.createElement('div')
-  workerCard.classList.add('worker__card')
-  let workerName = document.createElement('input')
-  workerName.placeholder = "Фамилия"
-  workerName.value = name
-  workerName.value ? workerName.disabled = true : workerName.disabled = false
-  workerName.required = true
-  workerName.type = "text"
-  workerName.classList.add('worker__name', 'worker__input')
-  let workerAmount = document.createElement('span')
-  workerAmount.classList.add('worker__amount')
-  workerAmount.textContent = `${amount} шт.`
-  let workerProgressContainer = document.createElement('div')
-  workerProgressContainer.classList.add('worker__progress-container')
-  let workerProgressBar = document.createElement('div')
-  workerProgressBar.classList.add('worker__progress-bar')
-  let workersPercent = document.createElement('span')
-  workersPercent.classList.add('worker__percent')
-  workersPercent.textContent = '0%'
-  let workersRemoveButton = document.createElement('button')
-  workersRemoveButton.classList.add('workers__remove-button', 'button')
-  workersRemoveButton.type = 'button'
-  let workersGroupList = document.createElement('ul')
-  workersGroupList.classList.add('worker__groups-list', 'minimized')
-  worker.appendChild(workerCard)
-  workerCard.appendChild(workerName)
-  workerCard.appendChild(workerAmount)
-  workerCard.appendChild(workerProgressContainer)
-  workerProgressContainer.appendChild(workerProgressBar)
-  workerCard.appendChild(workersPercent)
-  workerCard.appendChild(workersRemoveButton)
-  worker.appendChild(workersGroupList)
-  return worker
+function renderWorker(worker = {}) {
+  let $worker = document.createElement('li')
+  $worker.classList.add('workers__list-item', 'worker')
+  let $workerCard = document.createElement('div')
+  $workerCard.classList.add('worker__card')
+  let $workerName = document.createElement('input')
+  $workerName.placeholder = "Фамилия"
+  $workerName.value = worker.name ?? ''
+  $workerName.value ? $workerName.disabled = true : $workerName.disabled = false
+  $workerName.required = true
+  $workerName.type = "text"
+  $workerName.classList.add('worker__name', 'worker__input')
+  let $workerAmount = document.createElement('span')
+  $workerAmount.classList.add('worker__amount')
+  $workerAmount.textContent = (worker.totalValue ?? 0) + ' шт.'
+  let $workerProgressContainer = document.createElement('div')
+  $workerProgressContainer.classList.add('worker__progress-container')
+  let $workerProgressBar = document.createElement('div')
+  $workerProgressBar.classList.add('worker__progress-bar')
+  let $workersPercent = document.createElement('span')
+  $workersPercent.classList.add('worker__percent')
+  $workersPercent.textContent = '0%'
+  let $workersRemoveButton = document.createElement('button')
+  $workersRemoveButton.classList.add('workers__remove-button', 'button')
+  $workersRemoveButton.type = 'button'
+  let $workersGroupList = document.createElement('ul')
+  $workersGroupList.classList.add('worker__groups-list', 'minimized')
+  $worker.appendChild($workerCard)
+  $workerCard.appendChild($workerName)
+  $workerCard.appendChild($workerAmount)
+  $workerCard.appendChild($workerProgressContainer)
+  $workerProgressContainer.appendChild($workerProgressBar)
+  $workerCard.appendChild($workersPercent)
+  $workerCard.appendChild($workersRemoveButton)
+  $worker.appendChild($workersGroupList)
+  return $worker
  }
 
 // Слушатель событий для создания карточки сотрудника в DOM по нажатию на "+"
@@ -103,11 +106,11 @@ function loadWorkers() {
   if (localStorage.getItem('workers')) {
     let currentWorkers = JSON.parse(localStorage.getItem('workers'))
     currentWorkers.forEach(worker => {
-      workersList.appendChild(renderWorker(worker.name, worker.totalValue))
+      workersList.appendChild(renderWorker(worker))
       workers.push(createWorker(worker.name, worker.groups, worker.isFull, +worker.totalValue, +worker.completedValue, +worker.reducePercent, ))
     });
-    // setProgressBar()
     renderAllWorkersGroup()
+    setProgressBar()
   }
 }
 
@@ -155,7 +158,7 @@ document.addEventListener('click', (event) => {
 
 // Функция удаляет сотрудника из DOM, из массива и из групп
 function deleteWorker(workerName) {
-  
+  // Очищаем присвоенные сотруднику группы
   groups.forEach(group => {
     if (group.currentWorker === workerName) {
       changeGroupCompletedStatus(group, false)
@@ -170,20 +173,16 @@ function deleteWorker(workerName) {
       })
     }
   })
-
+  // Удаляем сотрудника из DOM
   let currentWorkerElement = [...document.querySelectorAll('.worker__name')].find(input => input.value === workerName).closest('.worker')
   currentWorkerElement.remove()
   workers = workers.filter(worker => worker.name !== workerName)
   saveWorkers()
-
   // Удаляем сотрудника из списка опций сотруников группы товаров
   let $groupsWorkersOptions = [...document.querySelectorAll('.groups__option')].filter($option => $option.value === workerName)
   $groupsWorkersOptions.forEach($option => {
     $option.remove()
   })
-
-  
-
   saveGroups()
 }
 
@@ -411,9 +410,10 @@ function deleteGroup(groupName) {
     worker.isFull = false // TODO - ДОБАВИТЬ ПРОВЕРКУ ЕСЛИ РАВНО ISFULL
     worker.totalValue = worker.getTotalValue()
     if (currentGroupObject.isCompleted) {
-      worker.completedValue -= +currentGroupObject.amount
+      worker.completedValue = worker.getCompletedValue()
     }
   })
+  setProgressBar()
   saveWorkers()
 }
 
@@ -425,29 +425,33 @@ function deleteGroup(groupName) {
 document.addEventListener('change', (event) => {
   if (event.target.classList.contains('groups__select')) {
     let currentGroupObject = groups.find(group => group.name === event.target.closest('.groups__item').querySelector('.groups__name').value)
+    let currentGroupWorkerObject = workers.find(worker => worker.name === event.target.value)
     if (event.target.value && !currentGroupObject.currentWorker) {
-      bindWorkerToGroup(event.target, currentGroupObject)
+      bindWorkerToGroup(currentGroupWorkerObject, currentGroupObject)
     } else if (!event.target.value) {
       unbindWorkerFromGroup(currentGroupObject)
     } else if (currentGroupObject.currentWorker) {
       unbindWorkerFromGroup(currentGroupObject)
-      bindWorkerToGroup(event.target, currentGroupObject)
+      bindWorkerToGroup(currentGroupWorkerObject, currentGroupObject)
     }
+    setProgressBar()
     saveGroups()
     saveWorkers()
   }
 })
 
 // Функция привязывает сотрудника к группе и добавляет её в массив групп сотрудника
-function bindWorkerToGroup(workerNameSelect, groupObject) {
-  let currentWorkerObject = workers.find(worker => worker.name === workerNameSelect.value)
+function bindWorkerToGroup(currentWorkerObject, groupObject) {
   groupObject.currentWorker = currentWorkerObject.name
   groupObject.isTaken = true
   currentWorkerObject.groups.push(groupObject)
   currentWorkerObject.totalValue = currentWorkerObject.getTotalValue()
   renderWorkerGroup(currentWorkerObject, groupObject)
-  let $currentSelect = [...workerNameSelect.querySelectorAll('.groups__option')].find(select => select.value === currentWorkerObject.name)
-  $currentSelect.classList.add('selected')
+  let $currentOptions = [...document.querySelectorAll('.groups__name')].find(group => group.value === groupObject.name).closest('.groups__item').querySelectorAll('.groups__option')
+  let $currentOption = [...$currentOptions].find(option => option.value === currentWorkerObject.name)
+  let $currentSelect = $currentOption.closest('.groups__select')
+  $currentSelect.value = currentWorkerObject.name
+  $currentOption.classList.add('selected')
   changeWorkersAmount(currentWorkerObject)
 }
 
@@ -458,12 +462,12 @@ function unbindWorkerFromGroup(groupObject) { // TODO - ДОБАВИТЬ ПРО�
   groupObject.isTaken = false
   currentWorkerObject.groups = currentWorkerObject.groups.filter(group => group.name !== groupObject.name)
   currentWorkerObject.totalValue = currentWorkerObject.getTotalValue()
+  if (groupObject.isCompleted) {
+    currentWorkerObject.completedValue = currentWorkerObject.getCompletedValue()
+  }
   let $currentOptions = [...document.querySelectorAll('.groups__name')].find(group => group.value === groupObject.name).closest('.groups__item').querySelectorAll('.groups__option')
   let $currentOption = [...$currentOptions].find(option => option.value === currentWorkerObject.name)
   $currentOption.classList.remove('selected')
-  if (groupObject.isCompleted) {
-    currentWorkerObject.completedValue -= +groupObject.amount
-  }
   let $currentGroupCard = [...document.querySelectorAll('.worker__group-name')].find(group => group.textContent === groupObject.name).closest('.worker__group')
   $currentGroupCard.remove()
   changeWorkersAmount(currentWorkerObject)
@@ -496,13 +500,13 @@ function changeGroupAmount(currentGroupObject, groupInput) {
         currentWorkerGroup.amount = +groupInput.value
         worker.totalValue = worker.getTotalValue()
         if (currentGroupObject.isCompleted) {
-          worker.completedValue -= currentGroupObject.amount
-          worker.completedValue += +groupInput.value
+          worker.completedValue = worker.getCompletedValue()
         }
       }
     })
   }
   currentGroupObject.amount = +groupInput.value
+  setProgressBar()
   saveWorkers()
 }
 
@@ -524,31 +528,31 @@ function renderAllWorkersGroup() {
 // Функция рендерит карточку группы для указанного сотрудника
 function renderWorkerGroup(workerObject, groupObject) {
   let $currentWorker = [...document.querySelectorAll('.worker__name')].find(worker => worker.value === workerObject.name).closest('.worker')
-  $currentWorker.querySelector('.worker__groups-list').appendChild(createWorkerGroup(groupObject.name, groupObject.amount, groupObject.isCompleted))
+  $currentWorker.querySelector('.worker__groups-list').appendChild(createWorkerGroup(groupObject))
 }
 
 // Функция возвращает карточку группы для списка групп сотрудника (DOM элемент)
-function createWorkerGroup(groupName, groupAmount, groupIsCompleted) {
-  let workerGroup = document.createElement('li')
-  workerGroup.classList.add('worker__group')
-  let workerGroupName = document.createElement('span')
-  workerGroupName.classList.add('worker__group-name')
-  workerGroupName.textContent = groupName
-  let workerGroupAmount = document.createElement('span')
-  workerGroupAmount.classList.add('worker__group-amount')
-  workerGroupAmount.textContent = groupAmount + ' шт.'
-  let workerGroupCheckbox = document.createElement('input')
-  workerGroupCheckbox.type = 'checkbox'
-  workerGroupCheckbox.classList.add('worker__group-checkbox', 'checkbox')
-  if (groupIsCompleted) {
-    workerGroupCheckbox.checked = true
+function createWorkerGroup(groupObject) {
+  let $workerGroup = document.createElement('li')
+  $workerGroup.classList.add('worker__group')
+  let $workerGroupName = document.createElement('span')
+  $workerGroupName.classList.add('worker__group-name')
+  $workerGroupName.textContent = groupObject.name
+  let $workerGroupAmount = document.createElement('span')
+  $workerGroupAmount.classList.add('worker__group-amount')
+  $workerGroupAmount.textContent = groupObject.amount + ' шт.'
+  let $workerGroupCheckbox = document.createElement('input')
+  $workerGroupCheckbox.type = 'checkbox'
+  $workerGroupCheckbox.classList.add('worker__group-checkbox', 'checkbox')
+  if (groupObject.isCompleted) {
+    $workerGroupCheckbox.checked = true
   } else {
-    workerGroupCheckbox.checked = false
+    $workerGroupCheckbox.checked = false
   }
-  workerGroup.appendChild(workerGroupName)  
-  workerGroup.appendChild(workerGroupAmount)  
-  workerGroup.appendChild(workerGroupCheckbox)
-  return workerGroup
+  $workerGroup.appendChild($workerGroupName)  
+  $workerGroup.appendChild($workerGroupAmount)  
+  $workerGroup.appendChild($workerGroupCheckbox)
+  return $workerGroup
 }
 
 
@@ -570,36 +574,123 @@ document.addEventListener('change', (event) => {
   }
 })
 
+// Функция меняет статус выполнения групп в списке групп и в группах сотрудника, отмечает чекбоксы и привязанные инпуты
 function changeGroupCompletedStatus(currentGroup, isChecked) {
   let $currentGroupCheckbox = [...document.querySelectorAll('.groups__name')].find(input => input.value === currentGroup.name).closest('.groups__item').querySelector('.groups__checkbox')
-  let $currentWorkerGroupCheckbox = [...document.querySelectorAll('.worker__group-name')].find(span => span.textContent === currentGroup.name).closest('.worker__group').querySelector('.worker__group-checkbox')
   let $currentGroupAmount = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__amount')
   let $currentGroupSelect = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__select')
   let currentGroupWorker = workers.find(worker => worker.name === currentGroup.currentWorker)
   if (isChecked) {
-    currentGroup.isCompleted = true
-    $currentWorkerGroupCheckbox.checked = true
-    console.log($currentWorkerGroupCheckbox)
-    $currentGroupCheckbox.checked = true
-    $currentGroupAmount.disabled = true
-    $currentGroupSelect.disabled = true
-    currentGroupWorker.groups.forEach(group => {
-      if (group.name === currentGroup.name) {
-        group.isCompleted = true
-      }
-    }) 
+    if (currentGroup.currentWorker) {
+      let $currentWorkerGroupCheckbox = [...document.querySelectorAll(".worker__group-name"),].find((span) => span.textContent === currentGroup.name).closest(".worker__group").querySelector(".worker__group-checkbox");
+      $currentWorkerGroupCheckbox.checked = true;
+      currentGroupWorker.groups.forEach((group) => {
+        if (group.name === currentGroup.name) {
+          group.isCompleted = true;
+        }
+      });
+      currentGroupWorker.completedValue = currentGroupWorker.getCompletedValue();
+    }
+    currentGroup.isCompleted = true;
+    $currentGroupCheckbox.checked = true;
+    $currentGroupAmount.disabled = true;
+    $currentGroupSelect.disabled = true;
   } else {
-    currentGroup.isCompleted = false
-    $currentWorkerGroupCheckbox.checked = false
-    $currentGroupCheckbox.checked = false
-    $currentGroupAmount.disabled = false
-    $currentGroupSelect.disabled = false
-    currentGroupWorker.groups.forEach(group => {
-      if (group.name === currentGroup.name) {
-        group.isCompleted = false
-      }
-    }) 
-  } 
+    if (currentGroup.currentWorker) {
+      let $currentWorkerGroupCheckbox = [...document.querySelectorAll(".worker__group-name"),].find((span) => span.textContent === currentGroup.name).closest(".worker__group").querySelector(".worker__group-checkbox");
+      $currentWorkerGroupCheckbox.checked = false;
+      currentGroupWorker.groups.forEach((group) => {
+        if (group.name === currentGroup.name) {
+          group.isCompleted = false;
+        }
+      });
+      currentGroupWorker.completedValue = currentGroupWorker.getCompletedValue();
+    }
+    currentGroup.isCompleted = false;
+    $currentGroupCheckbox.checked = false;
+    $currentGroupAmount.disabled = false;
+    $currentGroupSelect.disabled = false;
+  }
+  setProgressBar()
   saveGroups()
   saveWorkers()
+}
+
+// Функция меняет прогресс-бар
+function setProgressBar() {
+  let currentProgressBarsNodes = document.querySelectorAll('.worker__progress-bar')
+  currentProgressBarsNodes.forEach(progressBar => {
+    let currentWorkerNodeName = progressBar.parentNode.parentNode.querySelector('.worker__name').value
+    let currentPercentText = progressBar.parentNode.parentNode.querySelector('.worker__percent')
+    let currentWorker = workers.find(worker => worker.name === currentWorkerNodeName)
+    let currentPercent = Math.ceil((((currentWorker.getCompletedValue() / currentWorker.getTotalValue()) * 100)))
+    progressBar.style.width = currentPercent + '%'
+    if (!isNaN(currentPercent)) {
+      currentPercentText.textContent = currentPercent + '%'
+    } 
+  });
+}
+
+
+// --------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------- АВТОМАТИЧЕСКОЕ РАСПРЕДЕЛЕНИЕ ГРУПП
+// --------------------------------------------------------------------------------
+
+
+// Функция возвращает наибольшую НЕвзятую группу
+function findMaxUntakenGroup() {
+  return groups.filter(group => group.isTaken === false).sort((a, b) => b.amount - a.amount)[0]
+}
+
+// Функция возвращает сотрудников с наименьшим количеством товаров (если не полный)
+function findLowestWorker() {
+  let sortedWorkers = workers.filter(worker => worker.isFull === false).sort((a, b) => a.totalValue - b.totalValue)
+  let lowestWorkers = sortedWorkers.filter(worker => worker.totalValue === sortedWorkers[0].totalValue)
+  return lowestWorkers[Math.floor(Math.random() * lowestWorkers.length)]
+}
+
+// Функция возвращает общее количество в группах
+function sumOfGroupValues() {
+  return groups.reduce((sum, group) => sum + group.amount, 0)
+}
+
+// Функция возвращает среднее количество товаров на сотрудника
+function findAverageAmountofGroups() {
+  return Math.floor(sumOfGroupValues() / workers.length)
+}
+
+// Функция добавляет самую большую невзятую группу сотруднику с наименьшим количеством
+function getGroup() {
+  let currentMaxUntakenGroup = findMaxUntakenGroup()
+  let currentWorker = findLowestWorker()
+
+  if (currentMaxUntakenGroup) {
+    bindWorkerToGroup(currentWorker, currentMaxUntakenGroup)
+  
+    // let otherReduceValues = function() {
+    //   let sum = -(currentWorker.reduceTotalValue)
+    //   workers.forEach(worker => {
+    //     sum += worker.reduceTotalValue
+    //   });
+    //   return sum / workers.length
+    // }
+    // if (currentWorker.reduceTotalValue > 0) {
+    //   otherReduceValues()
+    // }
+    // if (currentWorker.totalValue >= (findAverageAmountofGroups() - currentWorker.reduceTotalValue + otherReduceValues())) {
+    //   currentWorker.isFull = true
+    // }
+  }
+  setProgressBar()
+  saveWorkers()
+  saveGroups()
+}
+
+// Функция распределяет все группы между сотрудниками
+function getAllGroups() {
+  for (let group of groups) {
+    getGroup()
+  }
+  renderDistributedGroups()
+  // location.reload()
 }

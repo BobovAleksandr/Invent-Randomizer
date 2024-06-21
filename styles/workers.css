@@ -1,9 +1,9 @@
 .workers {
   position: relative;
-  width: 520px;
+  width: 600px;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 50px;
 }
 
 .workers:hover .workers__add-button {
@@ -12,6 +12,10 @@
 
 .workers__title {
   text-align: center;
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 10px;
+  text-decoration-color: #00ADB5;
 }
 
 .workers__list {
@@ -22,6 +26,20 @@
 
 .workers__list:not(:has(.worker)) + .workers__add-button {
   opacity: 1;
+}
+
+.workers__header {
+  font-weight: bold;
+  display: flex;
+  padding-inline: 45px;
+}
+
+.workers__header-worker {
+  margin-inline-end: 95px;
+}
+
+.workers__header-amount {
+  margin-inline-end: 70px;
 }
 
 .worker {
@@ -81,7 +99,7 @@
 
 .worker__name {
   display: block;
-  width: 170px;
+  width: 200px;
   margin-left: 25px;
 }
 
@@ -135,7 +153,7 @@
 }
 
 .worker__progress-container {
-  width: 100px;
+  width: 140px;
   height: 18px;
   border: 1px solid #00ADB5;
   border-radius: 10px;
@@ -156,7 +174,7 @@
 }
 
 .worker__groups-list {
-  width: 480px;
+  width: 560px;
   background-color: #eee;
   padding-inline: 10px;
   border-radius: 7px;
@@ -178,7 +196,7 @@
 
 .worker__group-name {
   display: block;
-  width: 280px;
+  width: 350px;
   padding-left: 15px;
   margin-right: 20px;
 }

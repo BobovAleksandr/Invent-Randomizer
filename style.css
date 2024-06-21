@@ -28,10 +28,6 @@ input::-webkit-inner-spin-button {
   padding-block: 50px;
 }
 
-.table {
-  border-collapse: collapse;
-}
-
 .page__main {
   display: flex;
   gap: 150px;
@@ -67,8 +63,4 @@ display: none;
 
 .hidden {
   visibility: hidden;
-}
-
-.form {
-  
 }
