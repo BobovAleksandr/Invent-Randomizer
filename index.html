@@ -13,7 +13,7 @@
 <body class="page">
   <header class="page__header header">
     <div class="error__cantainer hidden">
-      <span class="error__text">хуй</span>
+      <span class="error__text">Текст ошибки</span>
     </div>
   </header>
   <main class="page__main">
@@ -68,12 +68,17 @@
     </section>
     <section class="groups">
       <h2 class="groups__title">Группы товаров</h2>
+      <button class="groups__clear-button button"></button>
+      <button class="groups__random-button button"></button>
       <ul class="groups__list">
       <div class="groups__header">
         <div class="groups__header-group">Группа товаров</div>
         <div class="groups__header-amount">Количество</div>
         <div class="groups__header-worker">Сотрудник</div>
-        <div class="groups__header-status">Статус</div>
+        <div class="groups__header-status">
+          <span class="groups__header-filter-text">Статус</span>
+          <span class="groups__header-filter-icon"></span>
+        </div>
       </div>
    <!-- <li class="groups__item">
           <input placeholder="Группа товаров" value="" required type="text" class="groups__name groups__input"></input>

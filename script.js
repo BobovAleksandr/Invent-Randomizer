@@ -232,13 +232,14 @@ groupAddButton.addEventListener("click", () => {
 })
 
 // Функция создаёт новую группу
-function createGroup(name = '', amount = 0, currentWorker = '', isTaken = false, isCompleted = false) {
+function createGroup(name = '', amount = 0, id = 0, currentWorker = '', isTaken = false, isCompleted = false) {
   return {
    name,
    amount,
    currentWorker,
    isTaken,
    isCompleted,
+   id,
  }
 }
 
@@ -328,8 +329,9 @@ function loadGroups() {
     let currentGroups = JSON.parse(localStorage.getItem('groups'))
     currentGroups.forEach(group => {
       groupsList.appendChild(renderGroup(group))
-      groups.push(createGroup(group.name, +group.amount, group.currentWorker, group.isTaken, group.isCompleted))
+      groups.push(createGroup(group.name, +group.amount, +group.id, group.currentWorker, group.isTaken, group.isCompleted))
     })
+    loadFilterStatus()
   }
 }
 
@@ -379,7 +381,7 @@ document.addEventListener('change', (event) => {
 
 // Функция добавляет группу в массив
 function addGroupToArray(groupName, groupAmount) {
-  groups.push(createGroup(groupName, +groupAmount))
+  groups.push(createGroup(groupName, +groupAmount, groups.length))
 }
 
 
@@ -611,10 +613,18 @@ function changeGroupCompletedStatus(currentGroup, isChecked) {
     $currentGroupAmount.disabled = false;
     $currentGroupSelect.disabled = false;
   }
+
+  function checkFilterStatus() {
+    return localStorage.getItem('filterStatus') === 'true'
+  }
+  
+  setGroupsFilter(checkFilterStatus())
   setProgressBar()
   saveGroups()
   saveWorkers()
 }
+
+
 
 // Функция меняет прогресс-бар
 function setProgressBar() {
@@ -691,6 +701,85 @@ function getAllGroups() {
   for (let group of groups) {
     getGroup()
   }
-  renderDistributedGroups()
-  // location.reload()
 }
+
+const randomButton = document.querySelector('.groups__random-button')
+
+randomButton.addEventListener('click', () => {
+  getAllGroups()
+})
+
+// --------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------- ФИЛЬТРАЦИЯ ГРУПП
+// --------------------------------------------------------------------------------
+
+const groupFilterButton = document.querySelector('.groups__header-status')
+
+groupFilterButton.addEventListener('click', () => {
+ let groupFilterIcon = groupFilterButton.querySelector('.groups__header-filter-icon')
+ groupFilterIcon.classList.toggle('filtered')
+ setGroupsFilter(groupFilterIcon.classList.contains('filtered'))
+})
+
+function setGroupsFilter(isFiltered) {
+  if (isFiltered) {
+    groups.sort((a, b) => a.isCompleted - b.isCompleted)
+  } else {
+    groups.sort((a, b) => a.id - b.id)
+  }
+  renderGroups()
+  saveFilterStatus(isFiltered)
+}
+
+function renderGroups() {
+  let $currentGroups = [...document.querySelectorAll('.groups__select')]
+  $currentGroups.forEach($group => {
+    $group.closest('.groups__item').remove()
+  })
+  groups.forEach(group => {
+    groupsList.appendChild(renderGroup(group))
+  })
+  saveGroups()
+}
+
+function saveFilterStatus(isFiltered) {
+  localStorage.setItem('filterStatus', isFiltered)
+}
+
+function loadFilterStatus() {
+  if (localStorage.getItem('filterStatus')) {
+    let isFiltered = localStorage.getItem('filterStatus')
+    let groupFilterIcon = groupFilterButton.querySelector('.groups__header-filter-icon')
+    if (isFiltered === 'true') {
+      groupFilterIcon.classList.add('filtered')
+    } 
+  }
+}
+
+// --------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------- ОЧИСТКА ВСЕГО
+// --------------------------------------------------------------------------------
+
+function clearAll() {
+  groups.forEach(group => {
+    group.currentWorker = ''
+    group.isCompleted = false
+    group.isTaken = false
+  })
+  workers.forEach(worker => {
+    worker.groups = []
+    worker.isFull = false
+    worker.totalValue = 0
+    worker.completedValue = 0
+    worker.reducePercent = 0
+  })
+  saveGroups()
+  saveWorkers()
+  location.reload()
+}
+
+const clearButton = document.querySelector('.groups__clear-button')
+
+clearButton.addEventListener('click', () => {
+  clearAll()
+})
