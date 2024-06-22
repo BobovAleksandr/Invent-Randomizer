@@ -8,17 +8,48 @@
   <link rel="stylesheet" href="./styles/header.css">
   <link rel="stylesheet" href="./styles/workers.css">
   <link rel="stylesheet" href="./styles/groups.css">
+  <link rel="stylesheet" href="./styles/dialog.css">
   <link rel="stylesheet" href="style.css">
 </head>
 <body class="page">
   <header class="page__header header">
+    <div class="total-status__container">
+      <!-- <h3 class="total-status__title">Статус инвентаризации</h3> -->
+      <div class="total-status__progress-bar-container">
+        <div class="total-status__progress-bar">
+        </div>
+        <span class="total-status__progress-bar-text">100%</span>
+      </div>
+    </div>
     <div class="error__cantainer hidden">
       <span class="error__text">Текст ошибки</span>
     </div>
   </header>
+  <dialog class="dialog__proportion">
+    <form class="dialog__window">
+      <h3 class="dialog__title">Доля инвентаризации сотрудников</h3>
+      <ul class="dialog__workers">
+        <!-- <li class="dialog__worker">
+          <span class="dialog__worker-name">Серебренников</span>
+          <input class="dialog__worker-percent" type="text" value="100"></input>
+          <span class="dialog__worker-percent--letter">%</span>
+        </li>
+        <li class="dialog__worker">
+          <span class="dialog__worker-name">Костиков</span>
+          <input class="dialog__worker-percent" type="text" value="100"></input>
+          <span class="dialog__worker-percent--letter">%</span>
+        </li> -->
+      </ul>
+      <div class="dialog__buttons">
+        <button class="dialog__button dialog__submit button" type="submit">Ок</button>
+        <button class="dialog__clear-button dialog__button button"></button>
+      </div>
+    </form>
+  </dialog>
   <main class="page__main">
     <section class="workers">
       <h2 class="workers__title">Сотрудники</h2>
+      <button class="workers__proportion button"></button>
       <ul class="workers__list">
         <div class="workers__header">
           <div class="workers__header-worker">Сотрудник</div>

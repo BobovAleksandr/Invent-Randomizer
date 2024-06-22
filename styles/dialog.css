@@ -1,0 +1,90 @@
+.dialog__proportion {
+  position: absolute;
+  top: 0;
+  width: 400px;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border: none;
+  z-index: 10;
+  border-radius: 10px;
+  padding: 20px;
+}
+
+.dialog__proportion::backdrop {
+  background-color: #000;
+  opacity: 0.5;
+}
+
+.dialog__window {
+  height: 100%;
+  border-radius: 10px;
+}
+
+.dialog__title {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.dialog__workers {
+  display: flex;
+  gap: 3px;
+  flex-direction: column;
+  padding-inline: 20px;
+}
+
+.dialog__worker {
+  padding: 5px 10px;
+  display: flex;
+  align-items: center;
+  background-color: #eee;
+  border-radius: 5px;
+}
+
+.dialog__worker-percent {
+  text-align: center;
+  max-width: 45px;
+  padding: 5px;
+  border-radius: 5px;
+  outline: none;
+  border: none;
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  margin-left: auto;
+  margin-right: 5px;
+}
+
+.dialog__buttons {
+  display: flex;
+  justify-content: center;
+}
+
+.dialog__submit {
+  display: block;
+}
+
+.dialog__button {
+  font-family: inherit;
+  font-weight: inherit;
+  font-size: inherit;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  margin-top: 15px;
+  background-color: #eee;
+}
+
+.dialog__button:hover {
+  background-color: #ddd;
+  cursor: pointer;
+}
+
+.dialog__clear-button {
+  position: absolute;
+  height: 40px;
+  right: 40px;
+  background: no-repeat center center #eee;
+  background-image: url(./../images/percent.svg);
+  background-size: 80%;
+}

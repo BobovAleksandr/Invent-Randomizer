@@ -23,20 +23,20 @@ let workers = []
   // name: 'Шаров',
   // groups: [],
   // isFull: false,
-  // reducePercent: 0,
+  // proportion: 100,
   // totalValue,
   // completedValue,
 // }
 
 // Функция создает и возращает нового сотрудника (объект)
-function createWorker(name = "", groups = [], isFull = false, totalValue = 0, completedValue = 0, reducePercent = 0) {
+function createWorker(name = "", groups = [], isFull = false, totalValue = 0, completedValue = 0, proportion = 100) {
   return {
     name,
     groups,
     isFull,
     totalValue,
     completedValue,
-    reducePercent,
+    proportion,
     getTotalValue: function() {
       let total = this.groups.reduce((sum, group) => sum + group.amount, 0)
       let $workerAmountSpan = [...document.querySelectorAll(".worker__name")].find((worker) => worker.value === this.name).nextElementSibling
@@ -107,17 +107,17 @@ function loadWorkers() {
     let currentWorkers = JSON.parse(localStorage.getItem('workers'))
     currentWorkers.forEach(worker => {
       workersList.appendChild(renderWorker(worker))
-      workers.push(createWorker(worker.name, worker.groups, worker.isFull, +worker.totalValue, +worker.completedValue, +worker.reducePercent, ))
+      workers.push(createWorker(worker.name, worker.groups, worker.isFull, +worker.totalValue, +worker.completedValue, +worker.proportion))
     });
     renderAllWorkersGroup()
     setProgressBar()
+    checkProportionStatus()
   }
 }
 
 // Слушатель событий - запускает загрузку сотрудников при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
   loadWorkers()
-  // renderDistributedGroups()
 })
 
 // Слушатель событий - по изменению Input'a проверяет на сопадение имён
@@ -648,9 +648,7 @@ function setProgressBar() {
 
 
 // Функция возвращает наибольшую НЕвзятую группу
-function findMaxUntakenGroup() {
-  return groups.filter(group => group.isTaken === false).sort((a, b) => b.amount - a.amount)[0]
-}
+const findMaxUntakenGroup = () => groups.filter(group => group.isTaken === false).sort((a, b) => b.amount - a.amount)[0]
 
 // Функция возвращает сотрудников с наименьшим количеством товаров (если не полный)
 function findLowestWorker() {
@@ -660,36 +658,29 @@ function findLowestWorker() {
 }
 
 // Функция возвращает общее количество в группах
-function sumOfGroupValues() {
-  return groups.reduce((sum, group) => sum + group.amount, 0)
-}
+const sumOfGroupValues = () => groups.reduce((sum, group) => sum + group.amount, 0)
 
 // Функция возвращает среднее количество товаров на сотрудника
-function findAverageAmountofGroups() {
-  return Math.floor(sumOfGroupValues() / workers.length)
-}
+const findAverageProportion = () => Math.floor(sumOfGroupValues() / workers.length)
+
+// Функция возвращает общее количество процентов для расчета долей
+const findTotalPercentage = () => workers.reduce((sum, worker) => sum + worker.proportion, 0)
 
 // Функция добавляет самую большую невзятую группу сотруднику с наименьшим количеством
 function getGroup() {
   let currentMaxUntakenGroup = findMaxUntakenGroup()
   let currentWorker = findLowestWorker()
-
   if (currentMaxUntakenGroup) {
-    bindWorkerToGroup(currentWorker, currentMaxUntakenGroup)
-  
-    // let otherReduceValues = function() {
-    //   let sum = -(currentWorker.reduceTotalValue)
-    //   workers.forEach(worker => {
-    //     sum += worker.reduceTotalValue
-    //   });
-    //   return sum / workers.length
-    // }
-    // if (currentWorker.reduceTotalValue > 0) {
-    //   otherReduceValues()
-    // }
-    // if (currentWorker.totalValue >= (findAverageAmountofGroups() - currentWorker.reduceTotalValue + otherReduceValues())) {
-    //   currentWorker.isFull = true
-    // }
+    if (currentWorker.isFull === false) {
+      let currentWorkerMaximum = Math.floor(sumOfGroupValues() / findTotalPercentage() * currentWorker.proportion)
+      if (currentWorker.totalValue + currentMaxUntakenGroup.amount <= currentWorkerMaximum) {
+        bindWorkerToGroup(currentWorker, currentMaxUntakenGroup)
+      } else if (currentWorker.proportion < 100) {
+        currentWorker.isFull = true
+      } else {
+        bindWorkerToGroup(currentWorker, currentMaxUntakenGroup)
+      }
+    } 
   }
   setProgressBar()
   saveWorkers()
@@ -698,10 +689,16 @@ function getGroup() {
 
 // Функция распределяет все группы между сотрудниками
 function getAllGroups() {
-  for (let group of groups) {
+  while (groups.filter(group => group.isTaken === false).length > 0) {
     getGroup()
   }
 }
+
+// function getAllGroups() {
+//   for (let group of groups) {
+//     getGroup()
+//   }
+// }
 
 const randomButton = document.querySelector('.groups__random-button')
 
@@ -771,7 +768,6 @@ function clearAll() {
     worker.isFull = false
     worker.totalValue = 0
     worker.completedValue = 0
-    worker.reducePercent = 0
   })
   saveGroups()
   saveWorkers()
@@ -783,3 +779,123 @@ const clearButton = document.querySelector('.groups__clear-button')
 clearButton.addEventListener('click', () => {
   clearAll()
 })
+
+// --------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------- ДОЛИ ИНВЕНТАРИЗАЦИИ
+// --------------------------------------------------------------------------------
+
+// Откртие / закрытие модального окна
+const proportionButton = document.querySelector('.workers__proportion')
+const proportionModalWindow = document.querySelector('.dialog__proportion')
+const proportionSubmitButon = document.querySelector('.dialog__submit')
+
+
+proportionButton.addEventListener('click', () => {
+  proportionModalWindow.showModal()
+  let proportionWorkersList = document.querySelector('.dialog__workers')
+  proportionWorkersList.innerHTML = ''
+  workers.forEach(worker => {
+    renderModalWorker(worker)
+  })
+})
+
+proportionModalWindow.addEventListener('submit', (event) => {
+  event.preventDefault()
+})
+
+proportionSubmitButon.addEventListener('click', () => {
+  saveWorkers()
+  proportionModalWindow.close()
+})
+
+const handleModalClick = (event) => {
+  const modalRect = proportionModalWindow.getBoundingClientRect();
+  if (
+    event.clientX < modalRect.left ||
+    event.clientX > modalRect.right ||
+    event.clientY < modalRect.top ||
+    event.clientY > modalRect.bottom
+  ) {
+    proportionModalWindow.close();
+  }
+}
+proportionModalWindow.addEventListener("click", handleModalClick);
+
+// Рендер сотрудника в DOM
+function renderModalWorker(workerObject) {
+  let proportionWorkersList = document.querySelector('.dialog__workers')
+  proportionWorkersList.appendChild(createModalWorker(workerObject))
+}
+
+// Функция возвращает карточку сотрудника для модального окна
+function createModalWorker(workerObject) {
+  let $worker = document.createElement('li')
+  $worker.classList.add('dialog__worker')
+  let $workerName = document.createElement('span')
+  $workerName.classList.add('dialog__worker-name')
+  $workerName.textContent = workerObject.name
+  let $workerPercent = document.createElement('input')
+  $workerPercent.type = 'text'
+  $workerPercent.classList.add('dialog__worker-percent')
+  $workerPercent.value = +workerObject.proportion ?? 100
+  let $workerPercentLetter = document.createElement('span')
+  $workerPercentLetter.classList.add('dialog__worker-percent--letter')
+  $workerPercentLetter.textContent = '%'
+  $worker.appendChild($workerName)
+  $worker.appendChild($workerPercent)
+  $worker.appendChild($workerPercentLetter)
+  return $worker
+}
+
+document.addEventListener('change', (event) => {
+  if (event.target.classList.contains('dialog__worker-percent')) {
+    let currentWorker = workers.find(worker => worker.name === event.target.previousElementSibling.textContent)
+    if (event.target.value < 0) {
+      showError('Доля не может быть меньше 0%')
+      event.target.value = 100
+    }
+    if (event.target.value > 100) {
+      showError('Доля не может быть больше 100%')
+      event.target.value = 100
+    }
+    changeProportion(currentWorker, event.target.value)
+  }
+})
+
+// Применение доли инвентаризации
+function changeProportion(workerObject, newProportion) {
+  workerObject.proportion = +newProportion
+  checkProportionStatus()
+  saveWorkers()
+}
+
+// Провверка и отрисовка отметки о присутствии коэффициентов
+function checkProportionStatus() {
+  if (workers.reduce((sum, worker) => sum + +worker.proportion, 0) < 100 * workers.length) {
+    proportionButton.classList.add('changed')
+  } else {
+  proportionButton.classList.remove('changed')
+  }
+}
+
+// Сброс коэффициентов интвентаризации
+const proportionResetButton = document.querySelector('.dialog__clear-button')
+
+proportionResetButton.addEventListener('click', () => {
+  resetProportions()
+})
+
+function resetProportions() {
+  let $proportionInputs = [...document.querySelectorAll('.dialog__worker-percent')]
+  $proportionInputs.forEach(input => {
+    input.value = 100
+  }) 
+  workers.forEach(worker => {
+    changeProportion(worker, 100)
+  })
+}
+
+// --------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------- ОБЩИЙ ПРОГРЕССБАР
+// --------------------------------------------------------------------------------
+
