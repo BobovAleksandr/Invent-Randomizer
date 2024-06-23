@@ -698,9 +698,14 @@ function getGroup() {
 
 // Функция распределяет все группы между сотрудниками
 function getAllGroups() {
-  while (groups.filter(group => group.isTaken === false).length > 0) {
-    getGroup()
+  if (workers.length > 0) {
+    while (groups.filter(group => group.isTaken === false).length > 0) {
+      getGroup()
+    }
+  } else  {
+    showError('Сотурдники не созданы')
   }
+  
 }
 
 const randomButton = document.querySelector('.groups__random-button')
@@ -861,9 +866,20 @@ document.addEventListener('change', (event) => {
       showError('Доля не может быть больше 100%')
       event.target.value = 100
     }
+
+    if (checkIfAnyFullProportion(currentWorker) === false) {
+      showError('Хотя бы один сотрудник должен иметь долю 100%')
+      event.target.value = 100
+    }
+
     changeProportion(currentWorker, event.target.value)
   }
 })
+
+function checkIfAnyFullProportion(currentWorker) {
+  let fullProportionWorker = workers.filter(worker => worker.name !== currentWorker.name).find(worker => worker.proportion === 100)
+  return fullProportionWorker ? true : false
+}
 
 // Применение доли инвентаризации
 function changeProportion(workerObject, newProportion) {
@@ -908,6 +924,9 @@ const totalProgresBarText = document.querySelector('.total-status__progress-bar-
 function checkTotalStatus() {
   let competedGroups = groups.filter(group => group.isCompleted === true).reduce((sum, group) => sum + group.amount, 0)
   let currentCompletedPercent = `${Math.ceil(competedGroups / sumOfGroupValues() * 100)}%`
+  if (isNaN(Math.ceil(competedGroups / sumOfGroupValues() * 100))) {
+    currentCompletedPercent = '0%'
+  }
   totalProgressBar.style.width = currentCompletedPercent
   totalProgresBarText.textContent = currentCompletedPercent
 }

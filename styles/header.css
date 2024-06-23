@@ -5,7 +5,7 @@
 }
 
 .error__cantainer {
-  width: 400px;
+  /* width: 600px; */
   height: 40px;
   border: 2px solid red;
   border-radius: 20px;
@@ -13,6 +13,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
+  padding: 20px;
 }
 
 .error__text {
@@ -43,8 +44,8 @@
 
 .total-status__progress-bar {
   background-color: #00ADB5;
-  width: 50%;
-  height: 0;
+  width: 0;
+  height: 100%;
 }
 
 .total-status__progress-bar-text {
