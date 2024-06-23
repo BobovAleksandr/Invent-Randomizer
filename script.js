@@ -111,6 +111,7 @@ function loadWorkers() {
     });
     renderAllWorkersGroup()
     setProgressBar()
+    checkTotalStatus()
     checkProportionStatus()
   }
 }
@@ -332,6 +333,7 @@ function loadGroups() {
       groups.push(createGroup(group.name, +group.amount, +group.id, group.currentWorker, group.isTaken, group.isCompleted))
     })
     loadFilterStatus()
+    checkTotalStatus()
   }
 }
 
@@ -393,7 +395,7 @@ document.addEventListener('click', (event) => {
   }
 })
 
-// Функция удаляет сотрудника из DOM, из массива и из групп
+// Функция удаляет группу из DOM, из массива и из групп
 function deleteGroup(groupName) {
   let $currentGroup = [...document.querySelectorAll('.groups__name')].find(input => input.value === groupName).closest('.groups__item')
   let currentGroupObject = groups.find(group => group.name === groupName)
@@ -409,12 +411,16 @@ function deleteGroup(groupName) {
 
   workers.forEach(worker => {
     worker.groups = worker.groups.filter(group => group.name !== groupName)
-    worker.isFull = false // TODO - ДОБАВИТЬ ПРОВЕРКУ ЕСЛИ РАВНО ISFULL
+    let currentWorkerMaximum = Math.floor(sumOfGroupValues() / findTotalPercentage() * worker.proportion)
     worker.totalValue = worker.getTotalValue()
+    if (worker.totalValue < currentWorkerMaximum) {
+      worker.isFull = false
+    }
     if (currentGroupObject.isCompleted) {
       worker.completedValue = worker.getCompletedValue()
     }
   })
+  checkTotalStatus()
   setProgressBar()
   saveWorkers()
 }
@@ -501,6 +507,10 @@ function changeGroupAmount(currentGroupObject, groupInput) {
       if (currentWorkerGroup) {
         currentWorkerGroup.amount = +groupInput.value
         worker.totalValue = worker.getTotalValue()
+        let currentWorkerMaximum = Math.floor(sumOfGroupValues() / findTotalPercentage() * worker.proportion)
+        if (worker.totalValue < currentWorkerMaximum) {
+          worker.isFull = false
+        }
         if (currentGroupObject.isCompleted) {
           worker.completedValue = worker.getCompletedValue()
         }
@@ -508,6 +518,7 @@ function changeGroupAmount(currentGroupObject, groupInput) {
     })
   }
   currentGroupObject.amount = +groupInput.value
+  checkTotalStatus()
   setProgressBar()
   saveWorkers()
 }
@@ -617,14 +628,13 @@ function changeGroupCompletedStatus(currentGroup, isChecked) {
   function checkFilterStatus() {
     return localStorage.getItem('filterStatus') === 'true'
   }
-  
+
   setGroupsFilter(checkFilterStatus())
   setProgressBar()
+  checkTotalStatus()
   saveGroups()
   saveWorkers()
 }
-
-
 
 // Функция меняет прогресс-бар
 function setProgressBar() {
@@ -640,7 +650,6 @@ function setProgressBar() {
     } 
   });
 }
-
 
 // --------------------------------------------------------------------------------
 // -------------------------------------------------------------------------------- АВТОМАТИЧЕСКОЕ РАСПРЕДЕЛЕНИЕ ГРУПП
@@ -673,7 +682,7 @@ function getGroup() {
   if (currentMaxUntakenGroup) {
     if (currentWorker.isFull === false) {
       let currentWorkerMaximum = Math.floor(sumOfGroupValues() / findTotalPercentage() * currentWorker.proportion)
-      if (currentWorker.totalValue + currentMaxUntakenGroup.amount <= currentWorkerMaximum) {
+      if (currentWorker.totalValue < currentWorkerMaximum) {
         bindWorkerToGroup(currentWorker, currentMaxUntakenGroup)
       } else if (currentWorker.proportion < 100) {
         currentWorker.isFull = true
@@ -693,12 +702,6 @@ function getAllGroups() {
     getGroup()
   }
 }
-
-// function getAllGroups() {
-//   for (let group of groups) {
-//     getGroup()
-//   }
-// }
 
 const randomButton = document.querySelector('.groups__random-button')
 
@@ -899,3 +902,12 @@ function resetProportions() {
 // -------------------------------------------------------------------------------- ОБЩИЙ ПРОГРЕССБАР
 // --------------------------------------------------------------------------------
 
+const totalProgressBar = document.querySelector('.total-status__progress-bar')
+const totalProgresBarText = document.querySelector('.total-status__progress-bar-text')
+
+function checkTotalStatus() {
+  let competedGroups = groups.filter(group => group.isCompleted === true).reduce((sum, group) => sum + group.amount, 0)
+  let currentCompletedPercent = `${Math.ceil(competedGroups / sumOfGroupValues() * 100)}%`
+  totalProgressBar.style.width = currentCompletedPercent
+  totalProgresBarText.textContent = currentCompletedPercent
+}
