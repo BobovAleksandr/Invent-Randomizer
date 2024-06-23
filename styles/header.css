@@ -44,7 +44,7 @@
 .total-status__progress-bar {
   background-color: #00ADB5;
   width: 50%;
-  height: 100%;
+  height: 0;
 }
 
 .total-status__progress-bar-text {
