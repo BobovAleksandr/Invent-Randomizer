@@ -68,9 +68,11 @@ display: none;
 }
 
 .rotatedArrow {
+  font-size: inherit;
 }
 
 .hiddenArrow {
+  font-size: inherit;
 }
 
 .completed {

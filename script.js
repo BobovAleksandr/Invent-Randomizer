@@ -254,6 +254,9 @@ function createGroup(name = '', amount = 0, id = 0, currentWorker = '', isTaken 
 function renderGroup(group = {}) {
   let $group = document.createElement('li')
   $group.classList.add('groups__item')
+  if (group.isCompleted) {
+    $group.classList.add('completed')
+  }
   let $groupName = document.createElement('input')
   $groupName.required = true
   $groupName.type = "text"
@@ -563,6 +566,9 @@ function renderWorkerGroup(workerObject, groupObject) {
 function createWorkerGroup(groupObject) {
   let $workerGroup = document.createElement('li')
   $workerGroup.classList.add('worker__group')
+  if (groupObject.isCompleted) {
+    $workerGroup.classList.add('completed')
+  }
   let $workerGroupName = document.createElement('span')
   $workerGroupName.classList.add('worker__group-name')
   $workerGroupName.textContent = groupObject.name
@@ -605,6 +611,7 @@ document.addEventListener('change', (event) => {
 // Функция меняет статус выполнения групп в списке групп и в группах сотрудника, отмечает чекбоксы и привязанные инпуты
 function changeGroupCompletedStatus(currentGroup, isChecked) {
   let $currentGroupCheckbox = [...document.querySelectorAll('.groups__name')].find(input => input.value === currentGroup.name).closest('.groups__item').querySelector('.groups__checkbox')
+  console.log($currentGroupCheckbox)
   let $currentGroup = $currentGroupCheckbox.closest('.groups__item')
   let $currentGroupAmount = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__amount')
   let $currentGroupSelect = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__select')
@@ -614,7 +621,7 @@ function changeGroupCompletedStatus(currentGroup, isChecked) {
       let $currentWorkerGroupCheckbox = [...document.querySelectorAll(".worker__group-name"),].find((span) => span.textContent === currentGroup.name).closest(".worker__group").querySelector(".worker__group-checkbox");
       let $currentWorkerGroup = $currentWorkerGroupCheckbox.closest('.worker__group')
       $currentWorkerGroup.classList.add('completed')
-      $currentWorkerGroupCheckbox.checked = true;
+      $currentWorkerGroupCheckbox.checked = true
       currentGroupWorker.groups.forEach((group) => {
         if (group.name === currentGroup.name) {
           group.isCompleted = true;
@@ -976,7 +983,6 @@ function checkButtonsVisibility() {
 function checkArrowVisibility() {
   let $workers = [...document.querySelectorAll('.worker')]
   $workers.forEach(worker => {
-    console.log(worker)
     let $workersGroups = worker.getElementsByClassName('worker__group')
     let $workerCard = worker.querySelector('.worker__card')
     if ($workersGroups.length === 0) {
