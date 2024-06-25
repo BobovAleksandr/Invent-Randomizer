@@ -62,3 +62,17 @@ display: none;
 .hidden {
   visibility: hidden;
 }
+
+.visible {
+  opacity: 1;
+}
+
+.rotatedArrow {
+}
+
+.hiddenArrow {
+}
+
+.completed {
+  color: rgba(34, 40, 49, 0.2);
+}

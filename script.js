@@ -56,7 +56,7 @@ function renderWorker(worker = {}) {
   let $worker = document.createElement('li')
   $worker.classList.add('workers__list-item', 'worker')
   let $workerCard = document.createElement('div')
-  $workerCard.classList.add('worker__card')
+  $workerCard.classList.add('worker__card', 'hiddenArrow', 'rotatedArrow')
   let $workerName = document.createElement('input')
   $workerName.placeholder = "Фамилия"
   $workerName.value = worker.name ?? ''
@@ -93,7 +93,11 @@ function renderWorker(worker = {}) {
 // Слушатель событий для создания карточки сотрудника в DOM по нажатию на "+"
 const workersList = document.querySelector('.workers__list')
 const workerAddButton = document.querySelector('.workers__add-button')
-workerAddButton.addEventListener('click', () => workersList.appendChild(renderWorker()))
+workerAddButton.addEventListener('click', () => 
+  workersList.appendChild(renderWorker()),
+  checkButtonsVisibility()
+)
+
 
  // Функция сохраняет сотрудников в Local Storage
 function saveWorkers() {
@@ -113,6 +117,8 @@ function loadWorkers() {
     setProgressBar()
     checkTotalStatus()
     checkProportionStatus()
+    checkButtonsVisibility()
+    checkArrowVisibility()
   }
 }
 
@@ -134,6 +140,7 @@ document.addEventListener('change', (event) => {
       event.target.disabled = true
       addWorkerToArray(event.target.value)
       saveWorkers()
+      checkButtonsVisibility()
       // Добавляем сотрудника в options  у каждого select'a сотрудника в группе
       let $groupsWorkersSelects = [...document.querySelectorAll('.groups__select')]
       $groupsWorkersSelects.forEach($select => {
@@ -168,10 +175,7 @@ function deleteWorker(workerName) {
       group.isCompleted = false
       let $currentGroupSelect = [...document.querySelectorAll('.groups__name')].find(input => input.value === group.name).closest('.groups__item').querySelector('.groups__select')
       $currentGroupSelect.value = ''
-      let $currentSelectOptions = [...$currentGroupSelect.querySelectorAll('.groups__option')]
-      $currentSelectOptions.forEach($option => {
-        $option.classList.remove('selected')
-      })
+      $currentGroupSelect.classList.remove('selected')
     }
   })
   // Удаляем сотрудника из DOM
@@ -185,6 +189,7 @@ function deleteWorker(workerName) {
     $option.remove()
   })
   saveGroups()
+  checkButtonsVisibility()
 }
 
 // -------------------------------------------------------------------------------- ОТОБРАЖЕНИЕ / СКРЫТИЕ ГРУПП У СОТРУДНИКА
@@ -207,8 +212,9 @@ document.addEventListener('click', (event) => {
 
 const toggleWorkerGroupList = (worker) => {
   let workerGroupList = worker.querySelector('.worker__groups-list')
+  let workerCard = workerGroupList.previousElementSibling
+  workerCard.classList.toggle('rotatedArrow')
   workerGroupList.classList.toggle('minimized')
-  // console.log('toggle')
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -301,7 +307,7 @@ function renderGroup(group = {}) {
     let $groupOption = renderWorkerSelectOption(worker.name)
     if (group.currentWorker === worker.name) {
       $groupOption.selected = true
-      $groupOption.classList.add('selected')
+      $groupWorker.classList.add('selected')
     }
     $groupWorker.appendChild($groupOption)
   });
@@ -334,6 +340,8 @@ function loadGroups() {
     })
     loadFilterStatus()
     checkTotalStatus()
+    checkButtonsVisibility()
+    checkArrowVisibility()
   }
 }
 
@@ -369,6 +377,7 @@ document.addEventListener('change', (event) => {
     if (currentGroupObject) {
       changeGroupAmount(currentGroupObject, event.target)
       saveGroups()
+      checkButtonsVisibility()
     } else {
       let groupNameInput = event.target.closest('.groups__item').querySelector('.groups__name')
       let groupAmountInput = event.target.closest('.groups__item').querySelector('.groups__amount')
@@ -376,6 +385,7 @@ document.addEventListener('change', (event) => {
         groupNameInput.disabled = true
         addGroupToArray(groupNameInput.value, groupAmountInput.value)
         saveGroups()
+        checkButtonsVisibility()
       }
     }
   }
@@ -406,7 +416,6 @@ function deleteGroup(groupName) {
   if (currentGroupObject.isTaken) {
     let $currentWorkerGroup = [...document.querySelectorAll('.worker__group-name')].find(group => group.textContent === groupName).closest('.worker__group')
     $currentWorkerGroup.remove()
-    // changeWorkersAmount(currentWorkerObject)
   }
 
   workers.forEach(worker => {
@@ -423,6 +432,8 @@ function deleteGroup(groupName) {
   checkTotalStatus()
   setProgressBar()
   saveWorkers()
+  checkButtonsVisibility()
+  checkArrowVisibility()
 }
 
 // --------------------------------------------------------------------------------
@@ -445,6 +456,7 @@ document.addEventListener('change', (event) => {
     setProgressBar()
     saveGroups()
     saveWorkers()
+    checkArrowVisibility()
   }
 })
 
@@ -459,7 +471,7 @@ function bindWorkerToGroup(currentWorkerObject, groupObject) {
   let $currentOption = [...$currentOptions].find(option => option.value === currentWorkerObject.name)
   let $currentSelect = $currentOption.closest('.groups__select')
   $currentSelect.value = currentWorkerObject.name
-  $currentOption.classList.add('selected')
+  $currentSelect.classList.add('selected')
   changeWorkersAmount(currentWorkerObject)
 }
 
@@ -475,7 +487,8 @@ function unbindWorkerFromGroup(groupObject) { // TODO - ДОБАВИТЬ ПРО�
   }
   let $currentOptions = [...document.querySelectorAll('.groups__name')].find(group => group.value === groupObject.name).closest('.groups__item').querySelectorAll('.groups__option')
   let $currentOption = [...$currentOptions].find(option => option.value === currentWorkerObject.name)
-  $currentOption.classList.remove('selected')
+  let $currentSelect = $currentOption.closest('.groups__select')
+  $currentSelect.classList.remove('selected')
   let $currentGroupCard = [...document.querySelectorAll('.worker__group-name')].find(group => group.textContent === groupObject.name).closest('.worker__group')
   $currentGroupCard.remove()
   changeWorkersAmount(currentWorkerObject)
@@ -486,6 +499,7 @@ function changeWorkersAmount(workerObject) {
   let $workerAmount = [...document.querySelectorAll('.worker__name')].find(worker => worker.value === workerObject.name).nextElementSibling
   if ($workerAmount.classList.contains('worker__amount')) {
     $workerAmount.textContent = `${workerObject.totalValue} шт.`
+    checkArrowVisibility()
   }
 }
 
@@ -535,7 +549,8 @@ function renderAllWorkersGroup() {
     currentWorkerObject.groups.forEach(group => {
       renderWorkerGroup(currentWorkerObject, group)
     })
-  });
+  })
+  checkArrowVisibility()
 }
 
 // Функция рендерит карточку группы для указанного сотрудника
@@ -590,12 +605,15 @@ document.addEventListener('change', (event) => {
 // Функция меняет статус выполнения групп в списке групп и в группах сотрудника, отмечает чекбоксы и привязанные инпуты
 function changeGroupCompletedStatus(currentGroup, isChecked) {
   let $currentGroupCheckbox = [...document.querySelectorAll('.groups__name')].find(input => input.value === currentGroup.name).closest('.groups__item').querySelector('.groups__checkbox')
+  let $currentGroup = $currentGroupCheckbox.closest('.groups__item')
   let $currentGroupAmount = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__amount')
   let $currentGroupSelect = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__select')
   let currentGroupWorker = workers.find(worker => worker.name === currentGroup.currentWorker)
   if (isChecked) {
     if (currentGroup.currentWorker) {
       let $currentWorkerGroupCheckbox = [...document.querySelectorAll(".worker__group-name"),].find((span) => span.textContent === currentGroup.name).closest(".worker__group").querySelector(".worker__group-checkbox");
+      let $currentWorkerGroup = $currentWorkerGroupCheckbox.closest('.worker__group')
+      $currentWorkerGroup.classList.add('completed')
       $currentWorkerGroupCheckbox.checked = true;
       currentGroupWorker.groups.forEach((group) => {
         if (group.name === currentGroup.name) {
@@ -608,10 +626,13 @@ function changeGroupCompletedStatus(currentGroup, isChecked) {
     $currentGroupCheckbox.checked = true;
     $currentGroupAmount.disabled = true;
     $currentGroupSelect.disabled = true;
+    $currentGroup.classList.add('completed')
   } else {
     if (currentGroup.currentWorker) {
       let $currentWorkerGroupCheckbox = [...document.querySelectorAll(".worker__group-name"),].find((span) => span.textContent === currentGroup.name).closest(".worker__group").querySelector(".worker__group-checkbox");
       $currentWorkerGroupCheckbox.checked = false;
+      let $currentWorkerGroup = $currentWorkerGroupCheckbox.closest('.worker__group')
+      $currentWorkerGroup.classList.remove('completed')
       currentGroupWorker.groups.forEach((group) => {
         if (group.name === currentGroup.name) {
           group.isCompleted = false;
@@ -623,6 +644,7 @@ function changeGroupCompletedStatus(currentGroup, isChecked) {
     $currentGroupCheckbox.checked = false;
     $currentGroupAmount.disabled = false;
     $currentGroupSelect.disabled = false;
+    $currentGroup.classList.remove('completed')
   }
 
   function checkFilterStatus() {
@@ -722,6 +744,7 @@ const groupFilterButton = document.querySelector('.groups__header-status')
 
 groupFilterButton.addEventListener('click', () => {
  let groupFilterIcon = groupFilterButton.querySelector('.groups__header-filter-icon')
+ groupFilterButton.classList.toggle('filter-on')
  groupFilterIcon.classList.toggle('filtered')
  setGroupsFilter(groupFilterIcon.classList.contains('filtered'))
 })
@@ -929,4 +952,37 @@ function checkTotalStatus() {
   }
   totalProgressBar.style.width = currentCompletedPercent
   totalProgresBarText.textContent = currentCompletedPercent
+}
+
+
+function checkButtonsVisibility() {
+  let $workers = document.getElementsByClassName('worker')
+  let $workersAddButton = document.querySelector('.workers__add-button')
+  if ($workers.length === 0) {
+    $workersAddButton.classList.add('visible')
+  } else {
+    $workersAddButton.classList.remove('visible')
+  }
+
+  let $groups = document.getElementsByClassName('groups__item')
+  let $groupsAddButton = document.querySelector('.groups__add-button')
+  if ($groups.length === 0) {
+    $groupsAddButton.classList.add('visible')
+  } else {
+    $groupsAddButton.classList.remove('visible')
+  }
+}
+
+function checkArrowVisibility() {
+  let $workers = [...document.querySelectorAll('.worker')]
+  $workers.forEach(worker => {
+    console.log(worker)
+    let $workersGroups = worker.getElementsByClassName('worker__group')
+    let $workerCard = worker.querySelector('.worker__card')
+    if ($workersGroups.length === 0) {
+      $workerCard.classList.add('hiddenArrow')
+    } else {
+      $workerCard.classList.remove('hiddenArrow')
+    }
+  })
 }

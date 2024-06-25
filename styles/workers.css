@@ -45,10 +45,6 @@
   gap: 5px;
 }
 
-.workers__list:not(:has(.worker)) + .workers__add-button {
-  opacity: 1;
-}
-
 .workers__header {
   font-weight: bold;
   display: flex;
@@ -90,11 +86,6 @@
   margin-bottom: 5px;
 }
 
-.worker:has(.minimized) > .worker__card::after {
-  transform: rotate(45deg);
-  margin-bottom: 4px;
-}
-
 .worker__card:hover {
   cursor: pointer;
   background-color: #ddd;
@@ -112,11 +103,16 @@
   transition: all 0.1s ease;
 }
 
-.worker:not(:has(.worker__group)) .worker__card::after {
+.rotatedArrow::after {
+  transform: rotate(45deg);
+  margin-bottom: 4px;
+}
+
+.hiddenArrow::after {
   display: none;
 }
 
-.worker:not(:has(.worker__group)) .worker__groups-list {
+.worker__groups-list:empty {
   display: none;
 }
 
@@ -208,10 +204,6 @@
   display: flex;
   align-items: center;
   padding-block: 15px;
-}
-
-.worker__group:has(:checked) {
-  color: rgba(34, 40, 49, 0.2);
 }
 
 .worker__group:not(:last-of-type) {
