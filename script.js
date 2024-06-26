@@ -55,6 +55,7 @@ function createWorker(name = "", groups = [], isFull = false, totalValue = 0, co
 function renderWorker(worker = {}) {
   let $worker = document.createElement('li')
   $worker.classList.add('workers__list-item', 'worker')
+  $worker.draggable = true
   let $workerCard = document.createElement('div')
   $workerCard.classList.add('worker__card', 'hiddenArrow', 'rotatedArrow')
   let $workerName = document.createElement('input')
@@ -611,7 +612,6 @@ document.addEventListener('change', (event) => {
 // Функция меняет статус выполнения групп в списке групп и в группах сотрудника, отмечает чекбоксы и привязанные инпуты
 function changeGroupCompletedStatus(currentGroup, isChecked) {
   let $currentGroupCheckbox = [...document.querySelectorAll('.groups__name')].find(input => input.value === currentGroup.name).closest('.groups__item').querySelector('.groups__checkbox')
-  console.log($currentGroupCheckbox)
   let $currentGroup = $currentGroupCheckbox.closest('.groups__item')
   let $currentGroupAmount = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__amount')
   let $currentGroupSelect = $currentGroupCheckbox.closest('.groups__item').querySelector('.groups__select')
@@ -961,7 +961,7 @@ function checkTotalStatus() {
   totalProgresBarText.textContent = currentCompletedPercent
 }
 
-
+// Функция проверяет видимость кнопкок добавления групп и сотрудников
 function checkButtonsVisibility() {
   let $workers = document.getElementsByClassName('worker')
   let $workersAddButton = document.querySelector('.workers__add-button')
@@ -980,6 +980,7 @@ function checkButtonsVisibility() {
   }
 }
 
+// Функция проверяет видимость стрелки развёртки списка групп сотрудников
 function checkArrowVisibility() {
   let $workers = [...document.querySelectorAll('.worker')]
   $workers.forEach(worker => {
@@ -992,3 +993,5 @@ function checkArrowVisibility() {
     }
   })
 }
+
+
