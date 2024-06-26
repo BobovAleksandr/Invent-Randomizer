@@ -78,3 +78,11 @@ display: none;
 .completed {
   color: rgba(34, 40, 49, 0.2);
 }
+
+.groups__item.moving {
+  background-color: rgba(0, 173, 181, 0.2);
+}
+
+.moving > .worker__card {
+  background-color: rgba(0, 173, 181, 0.2);
+}

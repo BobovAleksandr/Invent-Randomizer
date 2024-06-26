@@ -167,6 +167,10 @@
   padding-inline: 15px;
 }
 
+.groups__item:hover {
+  cursor: pointer;
+}
+
 .groups__item:hover .groups__remove-button {
   opacity: 1;
 }

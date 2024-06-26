@@ -29,8 +29,9 @@ let workers = []
 // }
 
 // Функция создает и возращает нового сотрудника (объект)
-function createWorker(name = "", groups = [], isFull = false, totalValue = 0, completedValue = 0, proportion = 100) {
+function createWorker(id = 0, name = "", groups = [], isFull = false, totalValue = 0, completedValue = 0, proportion = 100) {
   return {
+    id,
     name,
     groups,
     isFull,
@@ -112,7 +113,7 @@ function loadWorkers() {
     let currentWorkers = JSON.parse(localStorage.getItem('workers'))
     currentWorkers.forEach(worker => {
       workersList.appendChild(renderWorker(worker))
-      workers.push(createWorker(worker.name, worker.groups, worker.isFull, +worker.totalValue, +worker.completedValue, +worker.proportion))
+      workers.push(createWorker(workers.length, worker.name, worker.groups, worker.isFull, +worker.totalValue, +worker.completedValue, +worker.proportion))
     });
     renderAllWorkersGroup()
     setProgressBar()
@@ -154,7 +155,7 @@ document.addEventListener('change', (event) => {
 
 // Функция добавляет сотрудника в массив
 function addWorkerToArray(workerName) {
-  workers.push(createWorker(workerName))
+  workers.push(createWorker(workers.length, workerName))
 }
 
 // Слушатель событий - по нажатию на "-" запускает удаление сотрудника
@@ -255,6 +256,7 @@ function createGroup(name = '', amount = 0, id = 0, currentWorker = '', isTaken 
 function renderGroup(group = {}) {
   let $group = document.createElement('li')
   $group.classList.add('groups__item')
+  $group.draggable = true
   if (group.isCompleted) {
     $group.classList.add('completed')
   }
@@ -992,6 +994,97 @@ function checkArrowVisibility() {
       $workerCard.classList.remove('hiddenArrow')
     }
   })
+}
+
+// --------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------- DRAG AND DROP
+// --------------------------------------------------------------------------------
+
+workersList.addEventListener('dragstart', (evt) => {
+  evt.target.classList.add('moving')
+})
+
+workersList.addEventListener('dragend', (evt) => {
+  evt.target.classList.remove('moving')
+})
+
+workersList.addEventListener('dragover', (evt) => {
+  evt.preventDefault()
+  const activeElement = workersList.querySelector('.moving');
+  const currentElement = evt.target.closest('.worker')
+  const isMoveable = (activeElement !== currentElement && currentElement)
+  if (!isMoveable) {
+    return
+  }
+  const nextElement = getNextElement(evt.clientY, currentElement);
+  if (
+    nextElement &&
+    activeElement === nextElement.previousElementSibling ||
+    activeElement === nextElement
+  ) {
+    return
+  }
+  workersList.insertBefore(activeElement, nextElement)
+  rewriteWorkersId()
+})
+
+groupsList.addEventListener('dragstart', (evt) => {
+  console.log(evt.target)
+  evt.target.classList.add('moving')
+})
+
+groupsList.addEventListener('dragend', (evt) => {
+  evt.target.classList.remove('moving')
+})
+
+groupsList.addEventListener('dragover', (evt) => {
+  evt.preventDefault()
+  const activeElement = groupsList.querySelector('.moving');
+  const currentElement = evt.target.closest('.groups__item')
+  const isMoveable = (activeElement !== currentElement && currentElement)
+  if (!isMoveable) {
+    return
+  }
+  const nextElement = getNextElement(evt.clientY, currentElement);
+  if (
+    nextElement &&
+    activeElement === nextElement.previousElementSibling ||
+    activeElement === nextElement
+  ) {
+    return
+  }
+  groupsList.insertBefore(activeElement, nextElement)
+  rewriteGroupsId()
+})
+
+const getNextElement = (cursorPosition, currentElement) => {
+  const currentElementCoord = currentElement.getBoundingClientRect();
+  const currentElementCenter = currentElementCoord.y + currentElementCoord.height / 2;
+  const nextElement = (cursorPosition < currentElementCenter) ?
+      currentElement :
+      currentElement.nextElementSibling;
+  return nextElement
+}
+
+// Переназначение id после перетаскивания
+function rewriteWorkersId() {
+  let $workers = document.querySelectorAll('.worker__name')
+  $workers.forEach(($worker, index) => {
+    let currenwWorkerObject = workers.find(worker => worker.name === $worker.value)
+    currenwWorkerObject.id = index
+    workers = workers.sort((a, b) => a.id - b.id )
+  })
+  saveWorkers()
+}
+
+function rewriteGroupsId() {
+  let $groups = document.querySelectorAll('.groups__name')
+  $groups.forEach(($group, index) => {
+    let currentGroupObject = groups.find(group => group.name === $group.value)
+    currentGroupObject.id = index
+    groups = groups.sort((a, b) => a.id - b.id )
+  })
+  saveGroups()
 }
 
 
