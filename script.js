@@ -23,13 +23,13 @@ let workers = []
   // name: 'Шаров',
   // groups: [],
   // isFull: false,
-  // proportion: 100,
+  // proportion: 0,
   // totalValue,
   // completedValue,
 // }
 
 // Функция создает и возращает нового сотрудника (объект)
-function createWorker(id = 0, name = "", groups = [], isFull = false, totalValue = 0, completedValue = 0, proportion = 100) {
+function createWorker(id = 0, name = "", groups = [], isFull = false, totalValue = 0, completedValue = 0, proportion = 0) {
   return {
     id,
     name,
@@ -426,7 +426,7 @@ function deleteGroup(groupName) {
 
   workers.forEach(worker => {
     worker.groups = worker.groups.filter(group => group.name !== groupName)
-    let currentWorkerMaximum = Math.floor(sumOfGroupValues() / findTotalPercentage() * worker.proportion)
+    let currentWorkerMaximum = Math.floor(findAverageProportion() - +worker.proportion)
     worker.totalValue = worker.getTotalValue()
     if (worker.totalValue < currentWorkerMaximum) {
       worker.isFull = false
@@ -527,7 +527,7 @@ function changeGroupAmount(currentGroupObject, groupInput) {
       if (currentWorkerGroup) {
         currentWorkerGroup.amount = +groupInput.value
         worker.totalValue = worker.getTotalValue()
-        let currentWorkerMaximum = Math.floor(sumOfGroupValues() / findTotalPercentage() * worker.proportion)
+        let currentWorkerMaximum = Math.floor(findAverageProportion() - +worker.proportion)
         if (worker.totalValue < currentWorkerMaximum) {
           worker.isFull = false
         }
@@ -704,7 +704,18 @@ const sumOfGroupValues = () => groups.reduce((sum, group) => sum + group.amount,
 const findAverageProportion = () => Math.floor(sumOfGroupValues() / workers.length)
 
 // Функция возвращает общее количество процентов для расчета долей
-const findTotalPercentage = () => workers.reduce((sum, worker) => sum + worker.proportion, 0)
+// const findTotalPercentage = () => workers.reduce((sum, worker) => sum + worker.proportion, 0)
+
+// Функция возвращает минимальное уменьшение доли инвентаризации, если уменьшение есть у всех сотурдников
+function findWorkerLowestReduce() {
+  let workerLowestReduce = sumOfGroupValues()
+  workers.forEach(worker => {
+    if (worker.proportion < workerLowestReduce) {
+      workerLowestReduce = worker.proportion
+    }
+  })
+  return workerLowestReduce
+}
 
 // Функция добавляет самую большую невзятую группу сотруднику с наименьшим количеством
 function getGroup() {
@@ -712,13 +723,11 @@ function getGroup() {
   let currentWorker = findLowestWorker()
   if (currentMaxUntakenGroup) {
     if (currentWorker.isFull === false) {
-      let currentWorkerMaximum = Math.floor(sumOfGroupValues() / findTotalPercentage() * currentWorker.proportion)
-      if (currentWorker.totalValue < currentWorkerMaximum) {
+      let currentWorkerMaximum = Math.floor(findAverageProportion() - +currentWorker.proportion + findWorkerLowestReduce())
+      if (currentWorker.totalValue < currentWorkerMaximum || currentWorker.proportion == findWorkerLowestReduce()) {
         bindWorkerToGroup(currentWorker, currentMaxUntakenGroup)
-      } else if (currentWorker.proportion < 100) {
-        currentWorker.isFull = true
       } else {
-        bindWorkerToGroup(currentWorker, currentMaxUntakenGroup)
+        currentWorker.isFull = true
       }
     } 
   }
@@ -877,10 +886,10 @@ function createModalWorker(workerObject) {
   let $workerPercent = document.createElement('input')
   $workerPercent.type = 'text'
   $workerPercent.classList.add('dialog__worker-percent')
-  $workerPercent.value = +workerObject.proportion ?? 100
+  $workerPercent.value = +workerObject.proportion
   let $workerPercentLetter = document.createElement('span')
   $workerPercentLetter.classList.add('dialog__worker-percent--letter')
-  $workerPercentLetter.textContent = '%'
+  $workerPercentLetter.textContent = 'шт.'
   $worker.appendChild($workerName)
   $worker.appendChild($workerPercent)
   $worker.appendChild($workerPercentLetter)
@@ -891,27 +900,16 @@ document.addEventListener('change', (event) => {
   if (event.target.classList.contains('dialog__worker-percent')) {
     let currentWorker = workers.find(worker => worker.name === event.target.previousElementSibling.textContent)
     if (event.target.value < 0) {
-      showError('Доля не может быть меньше 0%')
-      event.target.value = 100
+      showError('Значение не может быть меньше 0')
+      event.target.value = 0
     }
-    if (event.target.value > 100) {
-      showError('Доля не может быть больше 100%')
-      event.target.value = 100
+    if (event.target.value > sumOfGroupValues()) {
+      showError('Значение не может быть больше общего количества товаров')
+      event.target.value = 0
     }
-
-    if (checkIfAnyFullProportion(currentWorker) === false) {
-      showError('Хотя бы один сотрудник должен иметь долю 100%')
-      event.target.value = 100
-    }
-
     changeProportion(currentWorker, event.target.value)
   }
 })
-
-function checkIfAnyFullProportion(currentWorker) {
-  let fullProportionWorker = workers.filter(worker => worker.name !== currentWorker.name).find(worker => worker.proportion === 100)
-  return fullProportionWorker ? true : false
-}
 
 // Применение доли инвентаризации
 function changeProportion(workerObject, newProportion) {
@@ -922,7 +920,7 @@ function changeProportion(workerObject, newProportion) {
 
 // Провверка и отрисовка отметки о присутствии коэффициентов
 function checkProportionStatus() {
-  if (workers.reduce((sum, worker) => sum + +worker.proportion, 0) < 100 * workers.length) {
+  if (workers.reduce((sum, worker) => sum + +worker.proportion, 0) > 0) {
     proportionButton.classList.add('changed')
   } else {
   proportionButton.classList.remove('changed')
@@ -939,10 +937,10 @@ proportionResetButton.addEventListener('click', () => {
 function resetProportions() {
   let $proportionInputs = [...document.querySelectorAll('.dialog__worker-percent')]
   $proportionInputs.forEach(input => {
-    input.value = 100
+    input.value = 0
   }) 
   workers.forEach(worker => {
-    changeProportion(worker, 100)
+    changeProportion(worker, 0)
   })
 }
 
